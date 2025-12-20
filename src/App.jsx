@@ -6,7 +6,6 @@ import Register from './components/Register'
 import Login from './components/Login'
 import Home from './components/Home'
 import Navbar from './components/Navbar'
-import About from './components/about'
 import Clients from './components/Clients'
 import Fournisseurs from './components/Fournisseurs'
 import Produits from './components/Produits'
@@ -143,7 +142,6 @@ function App() {
             <Routes>
               <Route element={<ProtectedRoute/>}> 
                 <Route path="/home" element={<Home/>}/>
-                <Route path="/about" element={<About/>}/>
                 <Route path="/clients" element={<Clients/>}/>
                 <Route path="/fournisseurs" element={<Fournisseurs/>}/>
                 <Route path="/produits" element={<Produits/>}/>
