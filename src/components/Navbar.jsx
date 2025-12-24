@@ -1,4 +1,3 @@
-// src/components/Navbar.jsx
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
@@ -23,7 +22,7 @@ import Chip from '@mui/material/Chip';
 import { Link, useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
-// Icônes Material-UI
+// Icônes Material-UI (gardez les mêmes imports)
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import PeopleIcon from '@mui/icons-material/People';
@@ -51,16 +50,23 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import TextFieldsIcon from '@mui/icons-material/TextFields'; // Nouvelle icône pour AFRITEXTIA
-import LocalMallIcon from '@mui/icons-material/LocalMall'; // Icône boutique
-import StorefrontIcon from '@mui/icons-material/Storefront'; // Icône magasin
 
 // Import du logo
-import logo from '../assets/logo.svg'; // Assurez-vous que le chemin est correct
+import logo from '../assets/logo.svg';
 
 import AxiosInstance from './AxiosInstance';
 
 const drawerWidth = 240;
+
+// Définition des couleurs de l'entreprise
+const COMPANY_COLORS = {
+  darkCyan: '#003C3F',
+  vividOrange: '#DA4A0E',
+  black: '#000000',
+  white: '#FFFFFF',
+  lightCyan: '#E6F3F4',
+  lightOrange: '#FFE8DE'
+};
 
 export default function Navbar(props) {
   const { content, mode, toggleColorMode } = props;
@@ -144,10 +150,6 @@ export default function Navbar(props) {
     setNotificationCount(total);
   }, [stocksFaibles.length, ventesImpayeesCount, ventesRetardCount]);
 
-  console.log('👤 Navbar - User data:', user);
-  console.log('🎭 Navbar - User role:', userRole);
-  console.log('📧 Navbar - User email:', userEmail);
-
   const isAdmin = () => userRole === 'admin';
   const isVendeur = () => userRole === 'vendeur';
 
@@ -173,25 +175,25 @@ export default function Navbar(props) {
   };
 
   const logoutUser = () => {
-    console.log('🚪 Logging out user...');
+    console.log('🚪 Déconnexion de l\'utilisateur...');
     handleMenuClose();
     
     AxiosInstance.post(`logoutall/`, {})
       .then(() => {
-        console.log('✅ Logout successful');
+        console.log('✅ Déconnexion réussie');
         localStorage.removeItem('Token');
         localStorage.removeItem('User');
         navigate('/');
       })
       .catch((error) => {
-        console.error('❌ Logout error:', error);
-        // Déconnecter même en cas d'erreur
+        console.error('❌ Erreur de déconnexion:', error);
         localStorage.removeItem('Token');
         localStorage.removeItem('User');
         navigate('/');
       });
   };
 
+  // Menu items (gardez les mêmes)
   const menuItems = [
     // Tableau de bord - Visible pour tous
     {
@@ -383,36 +385,38 @@ export default function Navbar(props) {
         position="fixed" 
         sx={{ 
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: 'primary.main',
-          boxShadow: 1,
-          background: 'linear-gradient(135deg, #1a237e 0%, #311b92 100%)' // Dégradé violet
+          backgroundColor: COMPANY_COLORS.darkCyan,
+          background: `linear-gradient(135deg, ${COMPANY_COLORS.darkCyan} 0%, #005056 100%)`,
+          boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+          borderBottom: `2px solid ${COMPANY_COLORS.vividOrange}`
         }}
       >
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
+        <Toolbar sx={{ justifyContent: 'space-between', minHeight: '70px' }}>
           {/* Partie gauche avec logo et nom */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            {/* Logo AFRITEXTIA */}
+            {/* Logo */}
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 1,
+              gap: 2,
               '&:hover': { opacity: 0.9 }
             }}>
               {/* Logo image */}
               <Box sx={{ 
-                width: 40, 
-                height: 40, 
-                borderRadius: '50%',
-                backgroundColor: 'white',
+                width: 48, 
+                height: 48, 
+                borderRadius: '8px',
+                backgroundColor: COMPANY_COLORS.white,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '4px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                padding: '6px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                border: `2px solid ${COMPANY_COLORS.vividOrange}`
               }}>
                 <img 
                   src={logo} 
-                  alt="AFRITEXTIA Logo" 
+                  alt="Logo de l'entreprise" 
                   style={{ 
                     width: '100%', 
                     height: '100%',
@@ -421,23 +425,24 @@ export default function Navbar(props) {
                 />
               </Box>
               
-              {/* Nom AFRITEXTIA avec style élégant */}
+              {/* Nom avec style corporate */}
               <Typography 
                 variant="h5" 
                 noWrap 
                 component="div"
                 sx={{ 
-                  fontWeight: 800,
-                  background: 'linear-gradient(90deg, #ffffff 0%, #e0e0e0 100%)',
+                  fontWeight: 900,
+                  background: `linear-gradient(90deg, ${COMPANY_COLORS.white} 0%, ${COMPANY_COLORS.lightCyan} 100%)`,
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
-                  letterSpacing: '0.5px',
-                  textShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                  fontFamily: "'Montserrat', 'Roboto', sans-serif"
+                  letterSpacing: '1px',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                  fontFamily: "'Montserrat', 'Roboto', sans-serif",
+                  fontSize: { xs: '1.2rem', sm: '1.5rem' }
                 }}
               >
-                AFRITEXTIA
+                 AFRITEXIA GESTION
               </Typography>
             </Box>
             
@@ -445,80 +450,36 @@ export default function Navbar(props) {
             <Chip 
               label={userRole === 'admin' ? 'ADMIN' : 'VENDEUR'}
               size="small"
-              color={userRole === 'admin' ? 'secondary' : 'success'}
               sx={{ 
-                height: 24, 
-                fontSize: '0.7rem', 
+                height: 26, 
+                fontSize: '0.75rem', 
                 fontWeight: 'bold',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                backgroundColor: COMPANY_COLORS.vividOrange,
+                color: COMPANY_COLORS.white,
+                boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                '& .MuiChip-label': {
+                  px: 1.5
+                }
               }}
             />
           </Box>
 
           {/* Partie droite avec contrôles */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {/* Bouton notifications (stocks faibles) */}
-            {(isAdmin() || isVendeur()) && notificationCount > 0 && (
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                PaperProps={{
-                  elevation: 3,
-                  sx: {
-                    mt: 1.5,
-                    width: 300,
-                  },
-                }}
-              >
-                <MenuItem disabled sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                  Notifications AFRITEXTIA
-                </MenuItem>
-                <Divider />
-                
-                {stocksFaibles.length > 0 && (
-                  <MenuItem onClick={() => { handleMenuClose(); navigate('/stocks-entrepot?low_stock=true'); }}>
-                    <ListItemIcon>
-                      <Badge badgeContent={stocksFaibles.length} color="error">
-                        <WarningIcon />
-                      </Badge>
-                    </ListItemIcon>
-                    Stocks faibles
-                  </MenuItem>
-                )}
-                
-                {ventesImpayeesCount > 0 && (
-                  <MenuItem onClick={() => { handleMenuClose(); navigate('/ventes?statut_paiement=non_paye'); }}>
-                    <ListItemIcon>
-                      <Badge badgeContent={ventesImpayeesCount} color="error">
-                        <MoneyOffIcon />
-                      </Badge>
-                    </ListItemIcon>
-                    Ventes impayées
-                  </MenuItem>
-                )}
-                
-                {ventesRetardCount > 0 && (
-                  <MenuItem onClick={() => { handleMenuClose(); navigate('/ventes?en_retard=true'); }}>
-                    <ListItemIcon>
-                      <Badge badgeContent={ventesRetardCount} color="error">
-                        <AccessTimeIcon />
-                      </Badge>
-                    </ListItemIcon>
-                    Ventes en retard
-                  </MenuItem>
-                )}
-              </Menu>
-            )}
-
             {/* Bouton notifications global */}
             {(isAdmin() || isVendeur()) && notificationCount > 0 && (
               <Tooltip title="Notifications">
                 <IconButton 
                   sx={{ 
-                    color: 'white',
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' }
+                    color: COMPANY_COLORS.white,
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                    '&:hover': { 
+                      backgroundColor: COMPANY_COLORS.vividOrange,
+                      transform: 'scale(1.05)'
+                    },
+                    transition: 'all 0.2s ease',
+                    mr: 1
                   }} 
                   onClick={handleMenuOpen}
                   aria-label="Notifications"
@@ -526,6 +487,13 @@ export default function Navbar(props) {
                   <Badge 
                     badgeContent={notificationCount} 
                     color="error"
+                    sx={{
+                      '& .MuiBadge-badge': {
+                        backgroundColor: COMPANY_COLORS.vividOrange,
+                        color: COMPANY_COLORS.white,
+                        fontWeight: 'bold'
+                      }
+                    }}
                   >
                     <WarningIcon />
                   </Badge>
@@ -533,14 +501,89 @@ export default function Navbar(props) {
               </Tooltip>
             )}
 
+            {/* Menu notifications détaillé */}
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+              PaperProps={{
+                elevation: 4,
+                sx: {
+                  mt: 1.5,
+                  width: 300,
+                  borderRadius: '8px',
+                  border: `1px solid ${COMPANY_COLORS.darkCyan}`,
+                  overflow: 'hidden'
+                },
+              }}
+            >
+              <MenuItem disabled sx={{ 
+                fontWeight: 'bold', 
+                color: COMPANY_COLORS.white,
+                backgroundColor: COMPANY_COLORS.darkCyan,
+                py: 1.5
+              }}>
+                🔔 Notifications
+              </MenuItem>
+              
+              {stocksFaibles.length > 0 && (
+                <MenuItem onClick={() => { handleMenuClose(); navigate('/stocks-entrepot?low_stock=true'); }}
+                  sx={{ py: 1.5 }}>
+                  <ListItemIcon>
+                    <Badge badgeContent={stocksFaibles.length} color="error">
+                      <WarningIcon />
+                    </Badge>
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Stocks faibles" 
+                    secondary={`${stocksFaibles.length} produit(s) concerné(s)`}
+                  />
+                </MenuItem>
+              )}
+              
+              {ventesImpayeesCount > 0 && (
+                <MenuItem onClick={() => { handleMenuClose(); navigate('/ventes?statut_paiement=non_paye'); }}
+                  sx={{ py: 1.5 }}>
+                  <ListItemIcon>
+                    <Badge badgeContent={ventesImpayeesCount} color="error">
+                      <MoneyOffIcon />
+                    </Badge>
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Ventes impayées" 
+                    secondary={`${ventesImpayeesCount} vente(s) impayée(s)`}
+                  />
+                </MenuItem>
+              )}
+              
+              {ventesRetardCount > 0 && (
+                <MenuItem onClick={() => { handleMenuClose(); navigate('/ventes?en_retard=true'); }}
+                  sx={{ py: 1.5 }}>
+                  <ListItemIcon>
+                    <Badge badgeContent={ventesRetardCount} color="error">
+                      <AccessTimeIcon />
+                    </Badge>
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Ventes en retard" 
+                    secondary={`${ventesRetardCount} vente(s) en retard`}
+                  />
+                </MenuItem>
+              )}
+            </Menu>
+
             {/* Bouton changement de thème */}
             <Tooltip title={mode === 'dark' ? 'Mode clair' : 'Mode sombre'}>
               <IconButton 
                 sx={{ 
                   ml: 1, 
-                  color: 'white',
-                  backgroundColor: 'rgba(255,255,255,0.1)',
-                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' }
+                  color: COMPANY_COLORS.white,
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  '&:hover': { 
+                    backgroundColor: COMPANY_COLORS.vividOrange,
+                    transform: 'scale(1.05)'
+                  },
+                  transition: 'all 0.2s ease'
                 }} 
                 onClick={toggleColorMode}
                 aria-label="Changer le thème"
@@ -555,20 +598,23 @@ export default function Navbar(props) {
                 onClick={handleMenuOpen}
                 sx={{ 
                   p: 0, 
-                  ml: 1,
-                  '&:hover': { opacity: 0.9 }
+                  ml: 1.5,
+                  '&:hover': { 
+                    transform: 'scale(1.05)'
+                  },
+                  transition: 'transform 0.2s ease'
                 }}
                 aria-label="Menu utilisateur"
               >
                 <Avatar 
                   sx={{ 
-                    width: 36, 
-                    height: 36, 
-                    bgcolor: 'secondary.main',
-                    fontSize: '1rem',
+                    width: 40, 
+                    height: 40, 
+                    bgcolor: COMPANY_COLORS.vividOrange,
+                    fontSize: '1.1rem',
                     fontWeight: 'bold',
-                    border: '2px solid white',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                    border: `2px solid ${COMPANY_COLORS.white}`,
+                    boxShadow: '0 3px 10px rgba(0,0,0,0.2)'
                   }}
                 >
                   {userInitial}
@@ -582,12 +628,13 @@ export default function Navbar(props) {
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
               PaperProps={{
-                elevation: 3,
+                elevation: 4,
                 sx: {
                   overflow: 'visible',
-                  filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
                   mt: 1.5,
-                  width: 280,
+                  width: 300,
+                  borderRadius: '12px',
+                  border: `1px solid ${COMPANY_COLORS.darkCyan}`,
                   '& .MuiAvatar-root': {
                     width: 32,
                     height: 32,
@@ -600,45 +647,40 @@ export default function Navbar(props) {
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
               {/* En-tête du menu */}
-              <MenuItem disabled sx={{ py: 2, backgroundColor: 'rgba(26, 35, 126, 0.05)' }}>
+              <MenuItem disabled sx={{ 
+                py: 2.5, 
+                backgroundColor: COMPANY_COLORS.darkCyan,
+                color: COMPANY_COLORS.white
+              }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                  <Box sx={{ 
-                    width: 48, 
-                    height: 48, 
-                    borderRadius: '50%',
-                    backgroundColor: 'primary.main',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '4px',
-                    boxShadow: '0 2px 8px rgba(26, 35, 126, 0.3)'
-                  }}>
-                    <img 
-                      src={logo} 
-                      alt="AFRITEXTIA Logo" 
-                      style={{ 
-                        width: '100%', 
-                        height: '100%',
-                        objectFit: 'contain',
-                        filter: 'brightness(0) invert(1)'
-                      }}
-                    />
-                  </Box>
+                  <Avatar 
+                    sx={{ 
+                      width: 50, 
+                      height: 50, 
+                      bgcolor: COMPANY_COLORS.vividOrange,
+                      fontSize: '1.3rem',
+                      fontWeight: 'bold',
+                      border: `2px solid ${COMPANY_COLORS.white}`
+                    }}
+                  >
+                    {userInitial}
+                  </Avatar>
                   <Box>
-                    <Typography variant="subtitle1" fontWeight="bold" color="primary.main">
+                    <Typography variant="subtitle1" fontWeight="bold" color="inherit">
                       {userName}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
                       {userEmail}
                     </Typography>
                     <Chip 
                       label={userRole === 'admin' ? 'Administrateur' : 'Vendeur'}
                       size="small"
-                      color={userRole === 'admin' ? 'primary' : 'success'}
                       sx={{ 
                         mt: 0.5, 
                         fontSize: '0.7rem',
-                        fontWeight: 'bold'
+                        fontWeight: 'bold',
+                        backgroundColor: COMPANY_COLORS.vividOrange,
+                        color: COMPANY_COLORS.white
                       }}
                     />
                   </Box>
@@ -648,7 +690,8 @@ export default function Navbar(props) {
               <Divider />
 
               {/* Option de profil */}
-              <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
+              <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}
+                sx={{ py: 1.5 }}>
                 <ListItemIcon>
                   <PersonIcon fontSize="small" />
                 </ListItemIcon>
@@ -656,16 +699,18 @@ export default function Navbar(props) {
               </MenuItem>
 
               {/* Option dashboard */}
-              <MenuItem onClick={() => { handleMenuClose(); navigate('/dashboard'); }}>
+              <MenuItem onClick={() => { handleMenuClose(); navigate('/dashboard'); }}
+                sx={{ py: 1.5 }}>
                 <ListItemIcon>
                   <DashboardIcon fontSize="small" />
                 </ListItemIcon>
-                Tableau de bord AFRITEXTIA
+                Tableau de bord
               </MenuItem>
 
               {/* Option paramètres (admin seulement) */}
               {isAdmin() && (
-                <MenuItem onClick={() => { handleMenuClose(); navigate('/parametres'); }}>
+                <MenuItem onClick={() => { handleMenuClose(); navigate('/parametres'); }}
+                  sx={{ py: 1.5 }}>
                   <ListItemIcon>
                     <SettingsIcon fontSize="small" />
                   </ListItemIcon>
@@ -679,12 +724,15 @@ export default function Navbar(props) {
               <MenuItem 
                 onClick={logoutUser}
                 sx={{ 
-                  color: 'error.main',
-                  '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.08)' }
+                  py: 1.5,
+                  color: COMPANY_COLORS.vividOrange,
+                  '&:hover': { 
+                    backgroundColor: 'rgba(218, 74, 14, 0.1)'
+                  }
                 }}
               >
                 <ListItemIcon>
-                  <LogoutIcon fontSize="small" color="error" />
+                  <LogoutIcon fontSize="small" sx={{ color: COMPANY_COLORS.vividOrange }} />
                 </ListItemIcon>
                 Déconnexion
               </MenuItem>
@@ -701,89 +749,91 @@ export default function Navbar(props) {
           [`& .MuiDrawer-paper`]: { 
             width: drawerWidth, 
             boxSizing: 'border-box',
-            backgroundColor: 'background.paper',
-            borderRight: '1px solid',
-            borderColor: 'divider',
-            background: 'linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%)'
+            backgroundColor: COMPANY_COLORS.white,
+            borderRight: `2px solid ${COMPANY_COLORS.darkCyan}`,
+            background: 'linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%)'
           },
         }}
       >
-        <Toolbar />
+        <Toolbar sx={{ minHeight: '70px' }} />
         <Box sx={{ overflow: 'auto', flexGrow: 1 }}>
-          {/* Header de la sidebar avec logo mini */}
+          {/* Header de la sidebar */}
           <Box sx={{ 
-            p: 2, 
+            p: 2.5, 
             display: 'flex', 
             alignItems: 'center', 
-            gap: 1,
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            backgroundColor: 'rgba(26, 35, 126, 0.02)'
+            gap: 1.5,
+            borderBottom: `2px solid ${COMPANY_COLORS.lightCyan}`,
+            backgroundColor: COMPANY_COLORS.darkCyan,
+            color: COMPANY_COLORS.white
           }}>
             <Box sx={{ 
-              width: 30, 
-              height: 30, 
-              borderRadius: '50%',
-              backgroundColor: 'primary.main',
+              width: 36, 
+              height: 36, 
+              borderRadius: '6px',
+              backgroundColor: COMPANY_COLORS.white,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '3px'
+              padding: '4px'
             }}>
               <img 
                 src={logo} 
-                alt="AFRITEXTIA" 
+                alt="Logo" 
                 style={{ 
                   width: '100%', 
                   height: '100%',
-                  objectFit: 'contain',
-                  filter: 'brightness(0) invert(1)'
+                  objectFit: 'contain'
                 }}
               />
             </Box>
             <Typography 
-              variant="caption" 
+              variant="subtitle2" 
               sx={{ 
                 fontWeight: 700,
-                color: 'primary.main',
-                fontSize: '0.8rem'
+                color: COMPANY_COLORS.white,
+                fontSize: '0.9rem'
               }}
             >
-              AFRITEXTIA
+              AFRITEXIA
             </Typography>
           </Box>
           
-          <List sx={{ p: 1 }}>
+          <List sx={{ p: 1.5 }}>
             {menuItems
               .filter(item => item.visible)
               .map((item) => (
-                <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
+                <ListItem key={item.id} disablePadding sx={{ mb: 0.75 }}>
                   <ListItemButton 
                     component={Link} 
                     to={item.path}
                     selected={item.path === path}
                     sx={{
                       '&.Mui-selected': {
-                        backgroundColor: 'primary.main',
-                        color: 'primary.contrastText',
+                        backgroundColor: COMPANY_COLORS.darkCyan,
+                        color: COMPANY_COLORS.white,
                         '& .MuiListItemIcon-root': {
-                          color: 'primary.contrastText',
+                          color: COMPANY_COLORS.white,
                         },
                         '&:hover': {
-                          backgroundColor: 'primary.dark',
+                          backgroundColor: COMPANY_COLORS.darkCyan,
+                          opacity: 0.95
                         },
+                        borderLeft: `4px solid ${COMPANY_COLORS.vividOrange}`,
                       },
                       '&:hover': {
-                        backgroundColor: 'rgba(26, 35, 126, 0.04)',
+                        backgroundColor: COMPANY_COLORS.lightCyan,
                       },
-                      borderRadius: 1,
+                      borderRadius: '8px',
                       mx: 0.5,
-                      py: 1,
+                      py: 1.25,
+                      pl: 2,
+                      transition: 'all 0.2s ease'
                     }}
                   >
                     <ListItemIcon 
                       sx={{ 
-                        color: item.path === path ? 'primary.contrastText' : 'inherit',
+                        color: item.path === path ? COMPANY_COLORS.white : COMPANY_COLORS.darkCyan,
                         minWidth: 40
                       }}
                     >
@@ -796,6 +846,13 @@ export default function Navbar(props) {
                           } 
                           color="error" 
                           size="small"
+                          sx={{
+                            '& .MuiBadge-badge': {
+                              backgroundColor: COMPANY_COLORS.vividOrange,
+                              color: COMPANY_COLORS.white,
+                              fontWeight: 'bold'
+                            }
+                          }}
                         >
                           {item.icon}
                         </Badge>
@@ -805,7 +862,7 @@ export default function Navbar(props) {
                       primary={item.text} 
                       primaryTypographyProps={{
                         fontSize: '0.9rem',
-                        fontWeight: item.path === path ? '600' : '400'
+                        fontWeight: item.path === path ? '600' : '500'
                       }}
                     />
                   </ListItemButton>
@@ -818,35 +875,40 @@ export default function Navbar(props) {
         {(isAdmin() || isVendeur()) && notificationCount > 0 && (
           <Box sx={{ 
             p: 2, 
-            borderTop: 1, 
-            borderColor: 'divider', 
-            bgcolor: 'warning.light',
-            borderLeft: '3px solid',
-            borderLeftColor: 'warning.main'
+            borderTop: `2px solid ${COMPANY_COLORS.lightCyan}`, 
+            bgcolor: COMPANY_COLORS.lightOrange,
+            borderLeft: `4px solid ${COMPANY_COLORS.vividOrange}`,
+            margin: 1.5,
+            borderRadius: '8px'
           }}>
             <Typography 
               variant="subtitle2" 
               sx={{ 
-                mb: 1, 
-                color: 'warning.dark',
+                mb: 1.5, 
+                color: COMPANY_COLORS.darkCyan,
                 fontWeight: 'bold',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1
               }}
             >
-              <WarningIcon fontSize="small" />
-              Alertes AFRITEXTIA
+              <WarningIcon fontSize="small" sx={{ color: COMPANY_COLORS.vividOrange }} />
+              Alertes système
             </Typography>
             
             {stocksFaibles.length > 0 && (
               <Typography 
                 variant="caption" 
-                color="error.main" 
                 sx={{ 
                   display: 'block',
                   cursor: 'pointer',
-                  '&:hover': { color: 'error.dark' }
+                  color: COMPANY_COLORS.darkCyan,
+                  mb: 1,
+                  fontWeight: '500',
+                  '&:hover': { 
+                    color: COMPANY_COLORS.vividOrange,
+                    textDecoration: 'underline'
+                  }
                 }}
                 onClick={handleNotificationsClick}
               >
@@ -857,11 +919,16 @@ export default function Navbar(props) {
             {ventesImpayeesCount > 0 && (
               <Typography 
                 variant="caption" 
-                color="error.main" 
                 sx={{ 
                   display: 'block',
                   cursor: 'pointer',
-                  '&:hover': { color: 'error.dark' }
+                  color: COMPANY_COLORS.darkCyan,
+                  mb: 1,
+                  fontWeight: '500',
+                  '&:hover': { 
+                    color: COMPANY_COLORS.vividOrange,
+                    textDecoration: 'underline'
+                  }
                 }}
                 onClick={handleVentesImpayeesClick}
               >
@@ -872,11 +939,16 @@ export default function Navbar(props) {
             {ventesRetardCount > 0 && (
               <Typography 
                 variant="caption" 
-                color="error.main" 
                 sx={{ 
                   display: 'block',
                   cursor: 'pointer',
-                  '&:hover': { color: 'error.dark' }
+                  color: COMPANY_COLORS.darkCyan,
+                  mb: 1,
+                  fontWeight: '500',
+                  '&:hover': { 
+                    color: COMPANY_COLORS.vividOrange,
+                    textDecoration: 'underline'
+                  }
                 }}
                 onClick={handleVentesRetardClick}
               >
@@ -886,16 +958,15 @@ export default function Navbar(props) {
             
             <Typography 
               variant="caption" 
-              color="primary.main" 
               sx={{ 
                 display: 'block', 
-                mt: 1,
+                mt: 1.5,
                 cursor: 'pointer',
-                textDecoration: 'none',
+                color: COMPANY_COLORS.vividOrange,
                 fontWeight: 'bold',
+                textAlign: 'center',
                 '&:hover': { 
-                  color: 'primary.dark',
-                  textDecoration: 'underline'
+                  opacity: 0.8
                 }
               }}
               onClick={() => navigate('/dashboard')}
@@ -908,32 +979,31 @@ export default function Navbar(props) {
         {/* Footer avec version */}
         <Box sx={{ 
           p: 2, 
-          borderTop: 1, 
-          borderColor: 'divider',
-          backgroundColor: 'rgba(26, 35, 126, 0.02)'
+          borderTop: `2px solid ${COMPANY_COLORS.lightCyan}`,
+          backgroundColor: COMPANY_COLORS.darkCyan,
+          color: COMPANY_COLORS.white
         }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
             <Typography 
               variant="caption" 
-              color="text.secondary" 
-              sx={{ fontSize: '0.75rem' }}
+              sx={{ fontSize: '0.75rem', opacity: 0.8 }}
             >
               v2.1.0
             </Typography>
             <Chip 
-              label="AFRITEXTIA Pro"
+              label="2025 EDITION"
               size="small"
-              color="primary"
               sx={{ 
                 fontSize: '0.65rem', 
                 height: 20,
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                backgroundColor: COMPANY_COLORS.vividOrange,
+                color: COMPANY_COLORS.white
               }}
             />
           </Box>
           <Typography 
             variant="caption" 
-            color="primary.main" 
             align="center"
             sx={{ 
               display: 'block', 
@@ -945,15 +1015,15 @@ export default function Navbar(props) {
           </Typography>
           <Typography 
             variant="caption" 
-            color="text.secondary" 
             align="center"
             sx={{ 
               display: 'block', 
               fontSize: '0.65rem',
-              mt: 0.5
+              mt: 0.5,
+              opacity: 0.8
             }}
           >
-            © 2024 AFRITEXTIA
+            © 2025 ADVERTISING COMPANY
           </Typography>
         </Box>
       </Drawer>
@@ -963,11 +1033,11 @@ export default function Navbar(props) {
         sx={{ 
           flexGrow: 1, 
           p: 3, 
-          backgroundColor: 'background.default', 
+          backgroundColor: mode === 'dark' ? '#121212' : '#f5f7fa', 
           minHeight: '100vh' 
         }}
       >
-        <Toolbar />
+        <Toolbar sx={{ minHeight: '70px' }} />
         {content}
       </Box>
     </Box>

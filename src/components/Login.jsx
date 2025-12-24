@@ -11,6 +11,16 @@ import { useNavigate } from 'react-router-dom'
 import logo from '../assets/logo.svg'
 import backgroundImage from '../assets/background-login.jpg'
 
+// Couleurs de l'entreprise
+const COMPANY_COLORS = {
+  darkCyan: '#003C3f',
+  vividOrange: '#DA4A0E',
+  black: '#000000',
+  darkCyanLight: 'rgba(0, 60, 63, 0.1)',
+  vividOrangeLight: 'rgba(218, 74, 14, 0.1)',
+  darkCyanTransparent: 'rgba(0, 60, 63, 0.8)'
+}
+
 const Login = () => {
     const navigate = useNavigate()
     
@@ -108,7 +118,7 @@ const Login = () => {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
                 }
             }}
         >
@@ -131,6 +141,7 @@ const Login = () => {
                             boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
                             backgroundColor: 'white',
                             fontWeight: 500,
+                            borderLeft: messageType === 'error' ? `4px solid ${COMPANY_COLORS.vividOrange}` : '4px solid #4caf50',
                         }}
                     >
                         {messageText}
@@ -170,7 +181,7 @@ const Login = () => {
                             left: 0,
                             right: 0,
                             bottom: 0,
-                            background: 'linear-gradient(135deg, rgba(8, 35, 116, 0.8) 0%, rgba(91, 8, 116, 0.6) 100%)',
+                            background: `linear-gradient(135deg, ${COMPANY_COLORS.darkCyanTransparent} 0%, rgba(0, 60, 63, 0.6) 100%)`,
                         }
                     }}
                 >
@@ -240,7 +251,8 @@ const Login = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        padding: { xs: 4, md: 6 }
+                        padding: { xs: 4, md: 6 },
+                        backgroundColor: 'white'
                     }}
                 >
                     <Paper
@@ -267,13 +279,13 @@ const Login = () => {
                                     padding: '16px',
                                     backgroundColor: 'white',
                                     borderRadius: '50%',
-                                    boxShadow: '0 8px 30px rgba(8, 35, 116, 0.15)',
+                                    boxShadow: `0 8px 30px ${COMPANY_COLORS.darkCyanLight}`,
                                     width: '100px',
                                     height: '100px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    border: '1px solid rgba(8, 35, 116, 0.1)'
+                                    border: `1px solid ${COMPANY_COLORS.darkCyanLight}`
                                 }}>
                                     <img 
                                         src={logo} 
@@ -292,19 +304,16 @@ const Login = () => {
                                         textAlign: 'center', 
                                         mb: 1,
                                         fontWeight: 700,
-                                        background: 'linear-gradient(90deg, rgba(8, 35, 116, 1) 45%, rgba(85, 111, 189, 1) 67%)',
-                                        backgroundClip: 'text',
-                                        WebkitBackgroundClip: 'text',
-                                        WebkitTextFillColor: 'transparent'
+                                        color: COMPANY_COLORS.darkCyan
                                     }}
                                 >
                                     Welcome Back
                                 </Typography>
                                 <Typography variant="body1" sx={{ 
-                                    color: '#666', 
+                                    color: COMPANY_COLORS.black, 
                                     textAlign: 'center',
                                     mb: 4,
-                                    opacity: 0.8
+                                    opacity: 0.7
                                 }}>
                                     Sign in to access your dashboard
                                 </Typography>
@@ -329,18 +338,19 @@ const Login = () => {
                                             borderRadius: '12px',
                                             backgroundColor: 'white',
                                             '&:hover fieldset': {
-                                                borderColor: 'rgba(8, 35, 116, 0.5)',
+                                                borderColor: COMPANY_COLORS.darkCyan,
                                                 borderWidth: '2px'
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: 'rgba(8, 35, 116, 1)',
+                                                borderColor: COMPANY_COLORS.darkCyan,
                                                 borderWidth: '2px'
                                             }
                                         },
                                         '& .MuiInputLabel-root': {
-                                            color: '#666',
+                                            color: COMPANY_COLORS.black,
+                                            opacity: 0.7,
                                             '&.Mui-focused': {
-                                                color: 'rgba(8, 35, 116, 1)'
+                                                color: COMPANY_COLORS.darkCyan
                                             }
                                         }
                                     }}
@@ -366,18 +376,19 @@ const Login = () => {
                                             borderRadius: '12px',
                                             backgroundColor: 'white',
                                             '&:hover fieldset': {
-                                                borderColor: 'rgba(8, 35, 116, 0.5)',
+                                                borderColor: COMPANY_COLORS.darkCyan,
                                                 borderWidth: '2px'
                                             },
                                             '&.Mui-focused fieldset': {
-                                                borderColor: 'rgba(8, 35, 116, 1)',
+                                                borderColor: COMPANY_COLORS.darkCyan,
                                                 borderWidth: '2px'
                                             }
                                         },
                                         '& .MuiInputLabel-root': {
-                                            color: '#666',
+                                            color: COMPANY_COLORS.black,
+                                            opacity: 0.7,
                                             '&.Mui-focused': {
-                                                color: 'rgba(8, 35, 116, 1)'
+                                                color: COMPANY_COLORS.darkCyan
                                             }
                                         }
                                     }}
@@ -393,13 +404,13 @@ const Login = () => {
                                 <Link 
                                     to="/request/password_reset" 
                                     style={{
-                                        color: '#666',
+                                        color: COMPANY_COLORS.darkCyan,
                                         textDecoration: 'none',
                                         fontSize: '0.9rem',
                                         fontWeight: '500',
                                         transition: 'all 0.3s ease',
                                         '&:hover': {
-                                            color: 'rgba(8, 35, 116, 1)',
+                                            color: COMPANY_COLORS.vividOrange,
                                             textDecoration: 'underline'
                                         }
                                     }}
@@ -418,17 +429,17 @@ const Login = () => {
                                     fullWidth
                                     sx={{
                                         height: '56px',
-                                        backgroundColor: '#16244d !important',
+                                        backgroundColor: `${COMPANY_COLORS.darkCyan} !important`,
                                         color: 'white !important',
                                         fontWeight: '600 !important',
                                         fontSize: '16px !important',
                                         textTransform: 'none',
                                         borderRadius: '12px !important',
-                                        boxShadow: '0 8px 25px rgba(22, 36, 77, 0.3) !important',
+                                        boxShadow: `0 8px 25px ${COMPANY_COLORS.darkCyan}40 !important`,
                                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important',
                                         '&:hover': {
-                                            backgroundColor: '#1d2f6b !important',
-                                            boxShadow: '0 12px 30px rgba(22, 36, 77, 0.4) !important',
+                                            backgroundColor: `${COMPANY_COLORS.vividOrange} !important`,
+                                            boxShadow: `0 12px 30px ${COMPANY_COLORS.vividOrange}40 !important`,
                                             transform: 'translateY(-3px) !important'
                                         },
                                         '&:active': {
@@ -449,26 +460,27 @@ const Login = () => {
                                 textAlign: 'center',
                                 mb: 4
                             }}>
-                                <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                                <Typography variant="body2" sx={{ color: COMPANY_COLORS.black, mb: 1, opacity: 0.7 }}>
                                     Don't have an account?
                                 </Typography>
                                 <Link 
                                     to="/register" 
                                     style={{
-                                        color: 'rgba(8, 35, 116, 1)',
+                                        color: COMPANY_COLORS.vividOrange,
                                         textDecoration: 'none',
                                         fontWeight: '600',
                                         fontSize: '1rem',
                                         transition: 'all 0.3s ease',
                                         padding: '8px 24px',
                                         borderRadius: '25px',
-                                        backgroundColor: 'rgba(8, 35, 116, 0.05)',
+                                        backgroundColor: COMPANY_COLORS.vividOrangeLight,
                                         display: 'inline-block',
                                         '&:hover': {
-                                            color: 'rgba(85, 111, 189, 1)',
-                                            backgroundColor: 'rgba(8, 35, 116, 0.1)',
+                                            color: 'white',
+                                            backgroundColor: COMPANY_COLORS.vividOrange,
                                             textDecoration: 'none',
-                                            transform: 'translateY(-1px)'
+                                            transform: 'translateY(-1px)',
+                                            boxShadow: `0 4px 15px ${COMPANY_COLORS.vividOrange}40`
                                         }
                                     }}
                                 >
@@ -483,11 +495,11 @@ const Login = () => {
                                 mb: 4,
                                 opacity: 0.5
                             }}>
-                                <Box sx={{ flex: 1, height: '1px', backgroundColor: '#ddd' }} />
-                                <Typography variant="body2" sx={{ mx: 2, color: '#666' }}>
+                                <Box sx={{ flex: 1, height: '1px', backgroundColor: COMPANY_COLORS.darkCyanLight }} />
+                                <Typography variant="body2" sx={{ mx: 2, color: COMPANY_COLORS.darkCyan }}>
                                     OR
                                 </Typography>
-                                <Box sx={{ flex: 1, height: '1px', backgroundColor: '#ddd' }} />
+                                <Box sx={{ flex: 1, height: '1px', backgroundColor: COMPANY_COLORS.darkCyanLight }} />
                             </Box>
 
                             {/* Liens supplémentaires */}
@@ -495,41 +507,44 @@ const Login = () => {
                                 <Link 
                                     to="/privacy" 
                                     style={{
-                                        color: '#666',
+                                        color: COMPANY_COLORS.darkCyan,
                                         textDecoration: 'none',
                                         fontSize: '0.8rem',
+                                        fontWeight: '500',
                                         '&:hover': {
-                                            color: 'rgba(8, 35, 116, 1)',
+                                            color: COMPANY_COLORS.vividOrange,
                                             textDecoration: 'underline'
                                         }
                                     }}
                                 >
                                     Privacy Policy
                                 </Link>
-                                <Typography variant="caption" sx={{ color: '#666', opacity: 0.5 }}>•</Typography>
+                                <Typography variant="caption" sx={{ color: COMPANY_COLORS.darkCyan, opacity: 0.5 }}>•</Typography>
                                 <Link 
                                     to="/terms" 
                                     style={{
-                                        color: '#666',
+                                        color: COMPANY_COLORS.darkCyan,
                                         textDecoration: 'none',
                                         fontSize: '0.8rem',
+                                        fontWeight: '500',
                                         '&:hover': {
-                                            color: 'rgba(8, 35, 116, 1)',
+                                            color: COMPANY_COLORS.vividOrange,
                                             textDecoration: 'underline'
                                         }
                                     }}
                                 >
                                     Terms of Service
                                 </Link>
-                                <Typography variant="caption" sx={{ color: '#666', opacity: 0.5 }}>•</Typography>
+                                <Typography variant="caption" sx={{ color: COMPANY_COLORS.darkCyan, opacity: 0.5 }}>•</Typography>
                                 <Link 
                                     to="/contact" 
                                     style={{
-                                        color: '#666',
+                                        color: COMPANY_COLORS.darkCyan,
                                         textDecoration: 'none',
                                         fontSize: '0.8rem',
+                                        fontWeight: '500',
                                         '&:hover': {
-                                            color: 'rgba(8, 35, 116, 1)',
+                                            color: COMPANY_COLORS.vividOrange,
                                             textDecoration: 'underline'
                                         }
                                     }}
@@ -541,13 +556,13 @@ const Login = () => {
                             {/* Footer */}
                             <Box sx={{ 
                                 pt: 3,
-                                borderTop: '1px solid rgba(0,0,0,0.1)',
+                                borderTop: `1px solid ${COMPANY_COLORS.darkCyanLight}`,
                                 textAlign: 'center'
                             }}>
                                 <Typography 
                                     variant="caption" 
                                     sx={{ 
-                                        color: '#666',
+                                        color: COMPANY_COLORS.black,
                                         opacity: 0.6,
                                         fontSize: '0.8rem',
                                         letterSpacing: '0.5px'

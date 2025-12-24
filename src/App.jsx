@@ -26,7 +26,7 @@ import RapportPaiements from './components/RapportPaiements'
 import { Routes, Route , useLocation} from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoutes'
 import PasswordResetRequest from './components/PasswordResetRequest'
-
+import PasswordReset from './components/PasswordReset'
 function App() {
   const [mode, setMode] = useState('light')
   const location = useLocation()
@@ -133,7 +133,7 @@ function App() {
           <Route path="/register" element={<Register />} />
          <Route path="/" element={<Login />} />
           <Route path="/request/password_reset" element={<PasswordResetRequest/>}/>
-         
+          <Route path="/password-reset/:token" element={<PasswordReset/>}/>
       </Routes>
         :
         // Avec Navbar pour les autres routes
