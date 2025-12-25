@@ -1,6 +1,7 @@
 // src/components/Dashboard.jsx
 import AxiosInstance from './AxiosInstance'
 import { React, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'; 
 import {
   Box,
   Typography,
@@ -17,10 +18,14 @@ import {
   CircularProgress,
   Alert,
   Button,
-  useTheme,
   alpha,
   IconButton,
-  Tooltip
+  Tooltip,
+  Paper,
+  Stack,
+  Avatar,
+  LinearProgress,
+  Divider
 } from '@mui/material'
 import {
   TrendingUp as TrendingUpIcon,
@@ -31,117 +36,48 @@ import {
   AttachMoney as MoneyIcon,
   ShoppingCart as CartIcon,
   Refresh as RefreshIcon,
-  Euro as EuroIcon,
   Warehouse as WarehouseIcon,
   Visibility as VisibilityIcon,
-  LocalShipping as ShippingIcon
+  LocalShipping as ShippingIcon,
+  Store as StoreIcon,
+  ArrowUpward as ArrowUpwardIcon,
+  CheckCircle as CheckCircleIcon,
+  MoreHoriz as MoreHorizIcon
 } from '@mui/icons-material'
 
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const theme = useTheme()
+  
+  // Couleurs de l'entreprise
+  const DARK_CYAN = '#003C3f'
+  const VIVID_ORANGE = '#DA4A0E'
+  const BLACK = '#000000'
+  const LIGHT_CYAN = alpha(DARK_CYAN, 0.1)
+  const LIGHT_ORANGE = alpha(VIVID_ORANGE, 0.1)
 
   // Fonction pour charger les données
   const fetchDashboardData = async () => {
     setLoading(true)
     setError(null)
     try {
-      console.log('📊 Tentative de chargement du dashboard...')
-      
-      // Vérifier si nous avons un token
       const token = localStorage.getItem('Token')
-      console.log('🔑 Token présent:', !!token)
-      
       if (!token) {
-        throw new Error('Non authentifié. Veuillez vous connecter.')
+        throw new Error('Session expirée')
       }
 
-      // Essayer avec différentes URLs
-      const endpoints = ['dashboard/', 'api/dashboard/']
-      let response = null
-      let lastError = null
-
-      for (const endpoint of endpoints) {
-        try {
-          console.log(`🔄 Essai avec endpoint: ${endpoint}`)
-          response = await AxiosInstance.get(endpoint)
-          console.log(`✅ Succès avec ${endpoint}:`, response.status)
-          break
-        } catch (err) {
-          console.log(`❌ Échec avec ${endpoint}:`, err.response?.status || err.message)
-          lastError = err
-        }
-      }
-
-      if (!response) {
-        throw lastError || new Error('Impossible de charger les données')
-      }
-
-      console.log('📦 Données reçues:', response.data)
+      const response = await AxiosInstance.get('dashboard/')
       
       if (response.data) {
         setDashboardData(response.data)
       } else {
-        throw new Error('Réponse vide du serveur')
+        throw new Error('Données non disponibles')
       }
       
     } catch (error) {
-      console.error('💥 Erreur complète:', error)
-      
-      let errorMessage = 'Erreur lors du chargement des données'
-      let errorDetails = ''
-      
-      if (error.response) {
-        // Erreur serveur
-        const status = error.response.status
-        const data = error.response.data
-        
-        console.log(`🔍 Détails erreur ${status}:`, data)
-        
-        switch(status) {
-          case 401:
-            errorMessage = 'Non authentifié'
-            errorDetails = 'Votre session a expiré. Veuillez vous reconnecter.'
-            // Rediriger vers login
-            localStorage.removeItem('Token')
-            localStorage.removeItem('User')
-            window.location.href = '/login'
-            break
-          case 403:
-            errorMessage = 'Accès interdit'
-            errorDetails = 'Vous n\'avez pas les permissions nécessaires.'
-            break
-          case 404:
-            errorMessage = 'API non trouvée'
-            errorDetails = 'L\'endpoint dashboard n\'existe pas sur le serveur.'
-            break
-          case 500:
-            errorMessage = 'Erreur serveur'
-            errorDetails = 'Le serveur a rencontré une erreur interne.'
-            break
-          default:
-            errorMessage = `Erreur ${status}`
-            errorDetails = data?.detail || JSON.stringify(data)
-        }
-      } else if (error.request) {
-        // Pas de réponse
-        errorMessage = 'Serveur injoignable'
-        errorDetails = `Vérifiez que :
-        1. Le serveur Django est démarré
-        2. L\'URL ${AxiosInstance.defaults.baseURL} est correcte
-        3. Vous êtes connecté à internet`
-      } else {
-        // Erreur de configuration
-        errorMessage = 'Erreur de configuration'
-        errorDetails = error.message
-      }
-      
-      setError(`${errorMessage}\n${errorDetails}`)
-      
-      // Données de démo pour continuer le développement
-      console.log('🛠️ Utilisation des données de démo')
+      console.error('Erreur:', error)
+      setError('Erreur de chargement')
       setDashboardData(getDemoData())
     } finally {
       setLoading(false)
@@ -158,26 +94,34 @@ const Dashboard = () => {
       total_entrepots: 3,
       valeur_stock_total: 23456.78,
       chiffre_affaires_mois: 12345.67,
-      chiffre_affaires_semaine: 4567.89
+      chiffre_affaires_semaine: 4567.89,
+      ventes_ce_mois: 23,
+      croissance_ventes: 27.8,
+      objectif_mois: 50000,
+      realisation_objectif: 91
     },
     produits_low_stock: [
-      { id: 1, nom: 'Smartphone X', stock_actuel: 2, stock_alerte: 5, statut: 'faible', code: 'SMX001' },
-      { id: 2, nom: 'Ordinateur Portable', stock_actuel: 0, stock_alerte: 3, statut: 'rupture', code: 'LAP002' },
-      { id: 3, nom: 'Écran 24"', stock_actuel: 4, stock_alerte: 10, statut: 'faible', code: 'MON003' }
+      { id: 1, nom: 'Smartphone X', stock_actuel: 2, stock_alerte: 5, statut: 'faible', code: 'SMX001', entrepot: 'Principal' },
+      { id: 2, nom: 'Ordinateur Portable', stock_actuel: 0, stock_alerte: 3, statut: 'rupture', code: 'LAP002', entrepot: 'Principal' },
+      { id: 3, nom: 'Écran 24"', stock_actuel: 4, stock_alerte: 10, statut: 'faible', code: 'MON003', entrepot: 'Secondaire' },
+      { id: 4, nom: 'Clavier Mécanique', stock_actuel: 1, stock_alerte: 5, statut: 'faible', code: 'KEY004', entrepot: 'Régional' }
     ],
     dernieres_ventes: [
-      { id: 1, numero_vente: 'V20240123001', client_nom: 'Entreprise Tech', montant_total: 456.78, created_at: new Date().toISOString(), statut: 'confirmee' },
-      { id: 2, numero_vente: 'V20240123002', client_nom: 'SARL Informatique', montant_total: 1234.56, created_at: new Date(Date.now() - 86400000).toISOString(), statut: 'confirmee' },
-      { id: 3, numero_vente: 'V20240123003', client_nom: 'Particulier Dupont', montant_total: 789.12, created_at: new Date(Date.now() - 172800000).toISOString(), statut: 'confirmee' }
+      { id: 1, numero_vente: 'V20250115001', client_nom: 'Entreprise Tech', montant_total: 456.78, created_at: new Date().toISOString(), statut: 'confirmee' },
+      { id: 2, numero_vente: 'V20250115002', client_nom: 'SARL Informatique', montant_total: 1234.56, created_at: new Date().toISOString(), statut: 'confirmee' },
+      { id: 3, numero_vente: 'V20250115003', client_nom: 'Particulier Dupont', montant_total: 789.12, created_at: new Date().toISOString(), statut: 'confirmee' },
+      { id: 4, numero_vente: 'V20250115004', client_nom: 'Société Innovation', montant_total: 2345.67, created_at: new Date().toISOString(), statut: 'confirmee' },
+      { id: 5, numero_vente: 'V20250115005', client_nom: 'Startup Digital', montant_total: 567.89, created_at: new Date().toISOString(), statut: 'confirmee' }
     ],
     entrepots: [
-      { id: 1, nom: 'Entrepôt Principal', adresse: '123 Rue Principale, Paris', actif: true, produits_count: 56, stock_total_valeur: 12345.67 },
-      { id: 2, nom: 'Entrepôt Secondaire', adresse: '456 Rue Secondaire, Lyon', actif: true, produits_count: 34, stock_total_valeur: 6789.01 }
+      { id: 1, nom: 'Entrepôt Principal', valeur_stock: 12345.67, produits_count: 56, statut: 'actif', occupation: 56 },
+      { id: 2, nom: 'Entrepôt Secondaire', valeur_stock: 6789.01, produits_count: 34, statut: 'actif', occupation: 68 },
+      { id: 3, nom: 'Entrepôt Régional', valeur_stock: 4321.09, produits_count: 23, statut: 'actif', occupation: 58 }
     ],
     top_produits: [
-      { id: 1, nom: 'Smartphone X', total_vendu: 45 },
-      { id: 2, nom: 'Ordinateur Portable', total_vendu: 32 },
-      { id: 3, nom: 'Écran 24"', total_vendu: 28 }
+      { id: 1, nom: 'Smartphone X', total_vendu: 45, chiffre_affaires: 22500, croissance: 15 },
+      { id: 2, nom: 'Ordinateur Portable', total_vendu: 32, chiffre_affaires: 25600, croissance: 8 },
+      { id: 3, nom: 'Écran 24"', total_vendu: 28, chiffre_affaires: 11200, croissance: 22 }
     ]
   })
 
@@ -185,22 +129,7 @@ const Dashboard = () => {
     fetchDashboardData()
   }, [])
 
-  // Formatage de date
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    try {
-      const date = new Date(dateString)
-      return date.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      })
-    } catch (e) {
-      return 'Date invalide'
-    }
-  }
-
-  // Formatage d'argent
+  // Formatage
   const formatMoney = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -210,358 +139,572 @@ const Dashboard = () => {
     }).format(amount || 0)
   }
 
-  // Composant de carte de statistique
-  const StatsCard = ({ icon, title, value, subtitle, color = 'primary' }) => (
-    <Card sx={{ 
-      height: '100%',
-      background: `linear-gradient(135deg, ${alpha(theme.palette[color].main, 0.1)} 0%, ${alpha(theme.palette[color].light, 0.05)} 100%)`,
-      border: `1px solid ${alpha(theme.palette[color].main, 0.2)}`,
-      transition: 'all 0.3s ease',
-      '&:hover': { transform: 'translateY(-4px)' }
-    }}>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography color="textSecondary" variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-              {title}
-            </Typography>
-            <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', color: `${color}.main` }}>
-              {value}
-            </Typography>
-            {subtitle && (
-              <Typography variant="caption" color="textSecondary">
-                {subtitle}
-              </Typography>
-            )}
-          </Box>
-          <Box
-            sx={{
-              background: `linear-gradient(135deg, ${theme.palette[color].main} 0%, ${theme.palette[color].dark} 100%)`,
-              color: 'white',
-              borderRadius: 3,
-              p: 1.5,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            {icon}
-          </Box>
-        </Box>
-      </CardContent>
-    </Card>
-  )
-
   if (loading) {
     return (
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: '100vh',
-        flexDirection: 'column',
-        gap: 3
+        height: '100vh'
       }}>
-        <CircularProgress size={80} thickness={4} />
-        <Typography variant="h5" color="textSecondary" fontWeight="600">
-          Chargement du Dashboard...
-        </Typography>
+        <CircularProgress size={60} sx={{ color: VIVID_ORANGE }} />
       </Box>
     )
   }
 
-  if (error && !dashboardData) {
-    return (
-      <Box sx={{ p: 3 }}>
-        <Alert 
-          severity="error"
-          sx={{ 
-            mb: 3,
-            whiteSpace: 'pre-wrap',
-            '& .MuiAlert-message': { width: '100%' }
-          }}
-          action={
-            <Button color="inherit" size="small" onClick={fetchDashboardData}>
-              Réessayer
-            </Button>
-          }
-        >
-          <Box>
-            <Typography fontWeight="bold" gutterBottom>
-              Erreur de chargement
-            </Typography>
-            <Typography variant="body2">
-              {error.split('\n').map((line, i) => (
-                <div key={i}>{line}</div>
-              ))}
-            </Typography>
-          </Box>
-        </Alert>
-        <Button 
-          variant="contained" 
-          startIcon={<RefreshIcon />}
-          onClick={fetchDashboardData}
-          sx={{ mb: 2 }}
-        >
-          Recharger les données
-        </Button>
-        <Button 
-          variant="outlined" 
-          onClick={() => window.location.href = '/login'}
-          sx={{ ml: 2 }}
-        >
-          Se reconnecter
-        </Button>
-      </Box>
-    )
-  }
-
-  const { stats, produits_low_stock, dernieres_ventes, entrepots } = dashboardData || {}
+  const { stats, produits_low_stock, dernieres_ventes, entrepots, top_produits } = dashboardData || {}
 
   return (
-    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'background.default' }}>
-      {/* En-tête */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: 4,
-        flexWrap: 'wrap',
-        gap: 2
+    <Box sx={{ 
+      minHeight: '100vh',
+      bgcolor: '#f8fafc',
+      overflow: 'auto',
+      py: 2,
+      px: 2
+    }}>
+      {/* Bannière objectif */}
+      <Paper sx={{ 
+        bgcolor: DARK_CYAN, 
+        color: 'white',
+        p: 3,
+        mb: 3,
+        borderRadius: 3,
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        <Box>
-          <Typography variant="h3" component="h1" gutterBottom sx={{ 
-            fontWeight: 'bold',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}>
-            Tableau de Bord
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            {error ? '⚠️ Mode démo - Données de test' : 'Vue d\'ensemble de votre activité'}
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          {error && (
-            <Chip 
-              label="Mode démo" 
-              color="warning" 
-              variant="outlined"
-              sx={{ fontWeight: 'bold' }}
-            />
-          )}
-          <Tooltip title="Actualiser les données">
-            <IconButton 
-              onClick={fetchDashboardData} 
-              color="primary"
-              sx={{ 
-                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
-              }}
-            >
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
-
-      {/* Cartes de statistiques principales */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            icon={<MoneyIcon sx={{ fontSize: 24 }} />}
-            title="CHIFFRE D'AFFAIRES"
-            value={formatMoney(stats?.chiffre_affaires)}
-            subtitle={`Mois: ${formatMoney(stats?.chiffre_affaires_mois)}`}
-            color="success"
-          />
-        </Grid>
+        <Box sx={{ 
+          position: 'absolute',
+          right: -20,
+          top: -20,
+          width: 150,
+          height: 150,
+          bgcolor: alpha(VIVID_ORANGE, 0.2),
+          borderRadius: '50%'
+        }} />
         
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            icon={<ReceiptIcon sx={{ fontSize: 24 }} />}
-            title="VENTES TOTALES"
-            value={stats?.total_ventes?.toLocaleString('fr-FR') || '0'}
-            subtitle="Transactions confirmées"
-            color="primary"
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            icon={<PeopleIcon sx={{ fontSize: 24 }} />}
-            title="CLIENTS"
-            value={stats?.total_clients?.toLocaleString('fr-FR') || '0'}
-            subtitle="Clients actifs"
-            color="info"
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            icon={<WarehouseIcon sx={{ fontSize: 24 }} />}
-            title="ENTREPÔTS"
-            value={stats?.total_entrepots?.toLocaleString('fr-FR') || '0'}
-            subtitle={stats?.total_produits?.toLocaleString('fr-FR') + ' produits'}
-            color="secondary"
-          />
-        </Grid>
-      </Grid>
-
-      {/* Dernières ventes */}
-      <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CartIcon />
-              Dernières Ventes
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
+              Suivez vos performances en temps réel
             </Typography>
-            <Button 
-              variant="outlined" 
-              size="small"
-              startIcon={<VisibilityIcon />}
-              onClick={() => window.location.href = '/ventes'}
-            >
-              Voir tout
-            </Button>
+            <Typography variant="body1" sx={{ opacity: 0.9 }}>
+              Objectif mensuel : {formatMoney(stats?.objectif_mois || 0)}
+            </Typography>
           </Box>
           
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ bgcolor: 'action.hover' }}>
-                  <TableCell sx={{ fontWeight: 600 }}>N° VENTE</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>CLIENT</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>DATE</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600 }}>MONTANT</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>STATUT</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {dernieres_ventes && dernieres_ventes.length > 0 ? (
-                  dernieres_ventes.slice(0, 5).map((vente, index) => (
-                    <TableRow key={vente.id || index} hover>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="600" color="primary.main">
-                          {vente.numero_vente}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="500">
-                          {vente.client_nom || 'Vente directe'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {formatDate(vente.created_at)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2" fontWeight="600" color="success.main">
-                          {formatMoney(vente.montant_total)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={vente.statut === 'confirmee' ? 'CONFIRMÉE' : vente.statut?.toUpperCase() || 'BROUILLON'}
-                          color={vente.statut === 'confirmee' ? 'success' : 'warning'}
-                          size="small"
-                          sx={{ fontWeight: 'bold' }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                      <Typography variant="body2" color="textSecondary">
-                        Aucune vente récente
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h1" fontWeight="bold" color={VIVID_ORANGE}>
+                {stats?.realisation_objectif || 0}%
+              </Typography>
+              <Typography variant="body2">Réalisé</Typography>
+            </Box>
+            
+            <Box sx={{ flex: 1, minWidth: 200 }}>
+              <LinearProgress 
+                variant="determinate" 
+                value={stats?.realisation_objectif || 0}
+                sx={{
+                  height: 16,
+                  borderRadius: 8,
+                  bgcolor: alpha('#fff', 0.2),
+                  '& .MuiLinearProgress-bar': {
+                    bgcolor: VIVID_ORANGE,
+                    borderRadius: 8
+                  }
+                }}
+              />
+            </Box>
+          </Box>
+        </Box>
+        
+        <Grid container spacing={2} sx={{ mt: 3 }}>
+          <Grid item xs={6} md={3}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h3" fontWeight="bold">
+                {stats?.ventes_ce_mois || 0}
+              </Typography>
+              <Typography variant="body2">Ventes ce mois</Typography>
+            </Box>
+          </Grid>
+          <Grid item xs={6} md={3}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h3" fontWeight="bold">
+                {formatMoney(stats?.chiffre_affaires_semaine || 0)}
+              </Typography>
+              <Typography variant="body2">CA cette semaine</Typography>
+            </Box>
+          </Grid>
+        </Grid>
+      </Paper>
 
-      {/* Actions rapides */}
-      <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom sx={{ color: 'white', fontWeight: 'bold', mb: 3 }}>
-            Actions Rapides
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={6} sm={3}>
-              <Button 
-                variant="contained" 
-                fullWidth 
-                startIcon={<ReceiptIcon />}
-                onClick={() => window.location.href = '/ventes'}
-                sx={{ 
-                  background: 'rgba(255,255,255,0.9)',
-                  color: '#667eea',
-                  fontWeight: 'bold',
-                  '&:hover': { background: 'white' }
-                }}
-              >
-                Nouvelle Vente
-              </Button>
+      {/* Contenu principal - 2 colonnes */}
+      <Grid container spacing={3}>
+        {/* Colonne gauche - 8/12 pour grand écran, 12/12 pour mobile */}
+        <Grid item xs={12} lg={8}>
+          {/* Statistiques principales - 4 cartes */}
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            {/* Carte CA */}
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ 
+                borderRadius: 3,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                height: '100%',
+                borderTop: `4px solid ${DARK_CYAN}`
+              }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Box sx={{ 
+                      bgcolor: alpha(DARK_CYAN, 0.1), 
+                      p: 1.5, 
+                      borderRadius: 2 
+                    }}>
+                      <MoneyIcon sx={{ color: DARK_CYAN, fontSize: 28 }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h4" fontWeight="bold" color={DARK_CYAN}>
+                        {formatMoney(stats?.chiffre_affaires)}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Chiffre d'affaires
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
+                    <ArrowUpwardIcon sx={{ color: VIVID_ORANGE }} />
+                    <Typography variant="body2" color={VIVID_ORANGE} fontWeight="600">
+                      +{stats?.croissance_ventes}% vs mois précédent
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
             </Grid>
-            <Grid item xs={6} sm={3}>
-              <Button 
-                variant="contained" 
-                fullWidth 
-                startIcon={<InventoryIcon />}
-                onClick={() => window.location.href = '/produits'}
-                sx={{ 
-                  background: 'rgba(255,255,255,0.9)',
-                  color: '#667eea',
-                  fontWeight: 'bold',
-                  '&:hover': { background: 'white' }
-                }}
-              >
-                Gérer Stock
-              </Button>
+
+            {/* Carte Ventes */}
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ 
+                borderRadius: 3,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                height: '100%',
+                borderTop: `4px solid ${VIVID_ORANGE}`
+              }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Box sx={{ 
+                      bgcolor: alpha(VIVID_ORANGE, 0.1), 
+                      p: 1.5, 
+                      borderRadius: 2 
+                    }}>
+                      <ReceiptIcon sx={{ color: VIVID_ORANGE, fontSize: 28 }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h4" fontWeight="bold" color={VIVID_ORANGE}>
+                        {stats?.total_ventes}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Ventes totales
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+                    {stats?.ventes_ce_mois} ce mois
+                  </Typography>
+                </CardContent>
+              </Card>
             </Grid>
-            <Grid item xs={6} sm={3}>
-              <Button 
-                variant="contained" 
-                fullWidth 
-                startIcon={<ShippingIcon />}
-                onClick={() => window.location.href = '/transferts'}
-                sx={{ 
-                  background: 'rgba(255,255,255,0.9)',
-                  color: '#667eea',
-                  fontWeight: 'bold',
-                  '&:hover': { background: 'white' }
-                }}
-              >
-                Transferts
-              </Button>
+
+            {/* Carte Clients */}
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ 
+                borderRadius: 3,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                height: '100%',
+                borderTop: `4px solid ${BLACK}`
+              }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Box sx={{ 
+                      bgcolor: alpha(BLACK, 0.1), 
+                      p: 1.5, 
+                      borderRadius: 2 
+                    }}>
+                      <PeopleIcon sx={{ color: BLACK, fontSize: 28 }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h4" fontWeight="bold" color={BLACK}>
+                        {stats?.total_clients}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Clients actifs
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+                    Base clientèle
+                  </Typography>
+                </CardContent>
+              </Card>
             </Grid>
-            <Grid item xs={6} sm={3}>
-              <Button 
-                variant="contained" 
-                fullWidth 
-                startIcon={<TrendingUpIcon />}
-                onClick={() => window.location.href = '/statistiques'}
-                sx={{ 
-                  background: 'rgba(255,255,255,0.9)',
-                  color: '#667eea',
-                  fontWeight: 'bold',
-                  '&:hover': { background: 'white' }
-                }}
-              >
-                Statistiques
-              </Button>
+
+            {/* Carte Stock */}
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ 
+                borderRadius: 3,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                height: '100%',
+                borderTop: `4px solid ${DARK_CYAN}`
+              }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Box sx={{ 
+                      bgcolor: alpha(DARK_CYAN, 0.1), 
+                      p: 1.5, 
+                      borderRadius: 2 
+                    }}>
+                      <WarehouseIcon sx={{ color: DARK_CYAN, fontSize: 28 }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h4" fontWeight="bold" color={DARK_CYAN}>
+                        {formatMoney(stats?.valeur_stock_total)}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Valeur stock
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+                    {stats?.total_produits} produits
+                  </Typography>
+                </CardContent>
+              </Card>
             </Grid>
           </Grid>
-        </CardContent>
-      </Card>
+
+          {/* Tableau des dernières ventes */}
+          <Card sx={{ 
+            borderRadius: 3,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            height: '100%'
+          }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                mb: 3
+              }}>
+                <Typography variant="h5" fontWeight="bold" color={DARK_CYAN} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CartIcon /> Dernières ventes
+                </Typography>
+               <Button 
+  component={Link}
+  to="/ventes"
+  variant="outlined" 
+  startIcon={<VisibilityIcon />}
+  sx={{ 
+    borderColor: DARK_CYAN,
+    color: DARK_CYAN,
+    '&:hover': { 
+      borderColor: VIVID_ORANGE,
+      bgcolor: alpha(VIVID_ORANGE, 0.05)
+    }
+  }}
+>
+  Voir toutes
+</Button>
+              </Box>
+
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ 
+                      bgcolor: LIGHT_CYAN,
+                      '& th': { 
+                        fontWeight: 'bold',
+                        color: DARK_CYAN,
+                        fontSize: '1rem',
+                        py: 2,
+                        borderBottom: `2px solid ${DARK_CYAN}`
+                      }
+                    }}>
+                      <TableCell>N° VENTE</TableCell>
+                      <TableCell>CLIENT</TableCell>
+                      <TableCell>DATE</TableCell>
+                      <TableCell align="right">MONTANT</TableCell>
+                      <TableCell align="center">STATUT</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {dernieres_ventes?.map((vente, index) => (
+                      <TableRow 
+                        key={index}
+                        sx={{ 
+                          '&:hover': { bgcolor: LIGHT_CYAN },
+                          '& td': { 
+                            py: 2,
+                            fontSize: '1rem'
+                          }
+                        }}
+                      >
+                        <TableCell>
+                          <Typography variant="body1" fontWeight="600">
+                            {vente.numero_vente}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body1">
+                            {vente.client_nom}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body1" color="textSecondary">
+                            {new Date(vente.created_at).toLocaleDateString('fr-FR')}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography variant="body1" fontWeight="bold" color={DARK_CYAN}>
+                            {formatMoney(vente.montant_total)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label="Confirmé"
+                            icon={<CheckCircleIcon />}
+                            sx={{
+                              bgcolor: alpha('#4caf50', 0.1),
+                              color: '#4caf50',
+                              fontWeight: 'bold',
+                              fontSize: '0.9rem',
+                              px: 1
+                            }}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Colonne droite - 4/12 pour grand écran, 12/12 pour mobile */}
+        <Grid item xs={12} lg={4}>
+          <Stack spacing={3}>
+            {/* Alertes stock */}
+            <Card sx={{ 
+              borderRadius: 3,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+            }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h5" fontWeight="bold" color={VIVID_ORANGE} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                  <WarningIcon /> Alertes stock
+                </Typography>
+
+                <Stack spacing={2}>
+                  {produits_low_stock?.map((produit, index) => (
+                    <Paper 
+                      key={index}
+                      sx={{ 
+                        p: 2.5,
+                        borderRadius: 2,
+                        border: `2px solid ${alpha(VIVID_ORANGE, 0.3)}`,
+                        bgcolor: alpha(VIVID_ORANGE, 0.05)
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                        <Typography variant="h6" fontWeight="bold">
+                          {produit.nom}
+                        </Typography>
+                        <Chip
+                          label={produit.statut === 'rupture' ? 'RUPTURE' : 'FAIBLE'}
+                          sx={{
+                            bgcolor: alpha(VIVID_ORANGE, 0.2),
+                            color: VIVID_ORANGE,
+                            fontWeight: 'bold',
+                            fontSize: '0.9rem'
+                          }}
+                        />
+                      </Box>
+                      
+                      <Box sx={{ mb: 1.5 }}>
+                        <Typography variant="body2" color="textSecondary">
+                          Code: {produit.code} • {produit.entrepot}
+                        </Typography>
+                      </Box>
+                      
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="body1" fontWeight="bold">
+                          Stock: {produit.stock_actuel}
+                        </Typography>
+                        <Typography variant="body1" color="textSecondary">
+                          Seuil: {produit.stock_alerte}
+                        </Typography>
+                      </Box>
+                    </Paper>
+                  ))}
+                </Stack>
+                
+                <Button
+                  fullWidth
+                  variant="contained"
+                  startIcon={<InventoryIcon />}
+                  sx={{
+                    mt: 3,
+                    bgcolor: VIVID_ORANGE,
+                    py: 1.5,
+                    fontSize: '1rem',
+                    '&:hover': { bgcolor: alpha(VIVID_ORANGE, 0.9) }
+                  }}
+                >
+                  Gérer le stock
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Entrepôts */}
+            <Card sx={{ 
+              borderRadius: 3,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+            }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h5" fontWeight="bold" color={DARK_CYAN} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                  <WarehouseIcon /> Entrepôts
+                </Typography>
+
+                <Stack spacing={2}>
+                  {entrepots?.map((entrepot, index) => (
+                    <Paper 
+                      key={index}
+                      sx={{ 
+                        p: 2.5,
+                        borderRadius: 2,
+                        border: `1px solid ${alpha(DARK_CYAN, 0.2)}`,
+                        bgcolor: LIGHT_CYAN
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                        <Typography variant="h6" fontWeight="bold">
+                          {entrepot.nom}
+                        </Typography>
+                        <Chip
+                          label="ACTIF"
+                          size="small"
+                          sx={{
+                            bgcolor: alpha('#4caf50', 0.1),
+                            color: '#4caf50',
+                            fontWeight: 'bold'
+                          }}
+                        />
+                      </Box>
+                      
+                      <Grid container spacing={2} sx={{ mb: 2 }}>
+                        <Grid item xs={6}>
+                          <Box>
+                            <Typography variant="body2" color="textSecondary">
+                              Valeur stock
+                            </Typography>
+                            <Typography variant="h6" fontWeight="bold" color={DARK_CYAN}>
+                              {formatMoney(entrepot.valeur_stock)}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Box>
+                            <Typography variant="body2" color="textSecondary">
+                              Produits
+                            </Typography>
+                            <Typography variant="h6" fontWeight="bold">
+                              {entrepot.produits_count}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                      
+                      <Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                          <Typography variant="body2" color="textSecondary">
+                            Occupation
+                          </Typography>
+                          <Typography variant="body2" fontWeight="bold">
+                            {entrepot.occupation}%
+                          </Typography>
+                        </Box>
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={entrepot.occupation}
+                          sx={{
+                            height: 8,
+                            borderRadius: 4,
+                            bgcolor: alpha(DARK_CYAN, 0.1),
+                            '& .MuiLinearProgress-bar': {
+                              bgcolor: DARK_CYAN,
+                              borderRadius: 4
+                            }
+                          }}
+                        />
+                      </Box>
+                    </Paper>
+                  ))}
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {/* Top produits */}
+            <Card sx={{ 
+              borderRadius: 3,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+            }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h5" fontWeight="bold" color={VIVID_ORANGE} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                  <TrendingUpIcon /> Top produits
+                </Typography>
+
+                <Stack spacing={2}>
+                  {top_produits?.map((produit, index) => (
+                    <Box 
+                      key={index}
+                      sx={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        p: 2,
+                        borderRadius: 2,
+                        bgcolor: alpha(VIVID_ORANGE, 0.05),
+                        border: `1px solid ${alpha(VIVID_ORANGE, 0.1)}`
+                      }}
+                    >
+                      <Avatar sx={{ 
+                        bgcolor: index === 0 ? VIVID_ORANGE : alpha(VIVID_ORANGE, 0.1),
+                        color: index === 0 ? 'white' : VIVID_ORANGE,
+                        mr: 2,
+                        width: 40,
+                        height: 40,
+                        fontSize: '1.2rem',
+                        fontWeight: 'bold'
+                      }}>
+                        {index + 1}
+                      </Avatar>
+                      
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="h6" fontWeight="bold">
+                          {produit.nom}
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          {produit.total_vendu} vendus • +{produit.croissance}%
+                        </Typography>
+                      </Box>
+                      
+                      <Typography variant="h6" fontWeight="bold" color={DARK_CYAN}>
+                        {formatMoney(produit.chiffre_affaires)}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Stack>
+              </CardContent>
+            </Card>
+          </Stack>
+        </Grid>
+      </Grid>
     </Box>
   )
 }

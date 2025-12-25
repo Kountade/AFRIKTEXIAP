@@ -40,8 +40,7 @@ import {
   InputAdornment,
   Divider,
   TablePagination,
-  LinearProgress,
-  Autocomplete
+  LinearProgress
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -49,7 +48,6 @@ import {
   Delete as DeleteIcon,
   Visibility as VisibilityIcon,
   CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
   PointOfSale as PointOfSaleIcon,
   Receipt as ReceiptIcon,
   PictureAsPdf as PdfIcon,
@@ -57,13 +55,10 @@ import {
   TrendingUp as TrendingUpIcon,
   Euro as EuroIcon,
   Person as PersonIcon,
-  Inventory as InventoryIcon,
-  LocalOffer as LocalOfferIcon,
   Warehouse as WarehouseIcon,
   Refresh as RefreshIcon,
   FilterList as FilterIcon,
-  AttachMoney as MoneyIcon,
-  Warning as WarningIcon
+  AttachMoney as MoneyIcon
 } from '@mui/icons-material'
 
 import jsPDF from 'jspdf'
@@ -94,7 +89,11 @@ const Ventes = () => {
   const [activeStep, setActiveStep] = useState(0)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
-  const theme = useTheme()
+
+  // Couleurs de l'entreprise
+  const darkCayn = '#003C3f'
+  const vividOrange = '#DA4A0E'
+  const black = '#000000'
 
   // Formulaire vente
   const [formData, setFormData] = useState({
@@ -168,15 +167,15 @@ const Ventes = () => {
   }
 
   // Composant de carte de statistique
-  const StatsCard = ({ icon, title, value, subtitle, color = 'primary' }) => (
+  const StatsCard = ({ icon, title, value, subtitle }) => (
     <Card sx={{ 
       height: '100%', 
-      background: `linear-gradient(135deg, ${alpha(theme.palette[color].main, 0.1)} 0%, ${alpha(theme.palette[color].light, 0.05)} 100%)`,
-      border: `1px solid ${alpha(theme.palette[color].main, 0.2)}`,
+      background: `linear-gradient(135deg, ${alpha(darkCayn, 0.1)} 0%, ${alpha(vividOrange, 0.05)} 100%)`,
+      border: `1px solid ${alpha(darkCayn, 0.2)}`,
       transition: 'all 0.3s ease-in-out',
       '&:hover': { 
         transform: 'translateY(-4px)',
-        boxShadow: `0 8px 25px ${alpha(theme.palette[color].main, 0.15)}`,
+        boxShadow: `0 8px 25px ${alpha(darkCayn, 0.15)}`,
       }
     }}>
       <CardContent>
@@ -185,7 +184,7 @@ const Ventes = () => {
             <Typography color="textSecondary" variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
               {title}
             </Typography>
-            <Typography variant="h4" component="div" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', color: darkCayn }}>
               {value}
             </Typography>
             {subtitle && (
@@ -196,7 +195,7 @@ const Ventes = () => {
           </Box>
           <Box
             sx={{
-              background: `linear-gradient(135deg, ${theme.palette[color].main} 0%, ${theme.palette[color].dark} 100%)`,
+              background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
               color: 'white',
               borderRadius: 3,
               p: 2,
@@ -882,24 +881,6 @@ const Ventes = () => {
     }
   }
 
-  // Annuler une vente
-  const handleAnnulerVente = async (venteId) => {
-    try {
-      const response = await AxiosInstance.post(`ventes/${venteId}/annuler/`, {})
-      setSnackbar({ open: true, message: 'Vente annulée avec succès', severity: 'success' })
-      
-      // Rafraîchir les données de cette vente spécifique
-      await refreshVenteDetails(venteId)
-      
-      // Rafraîchir toutes les données
-      fetchData()
-    } catch (err) {
-      console.error('Error cancelling vente:', err)
-      const errorMessage = err.response?.data?.error || 'Erreur lors de l\'annulation'
-      setSnackbar({ open: true, message: errorMessage, severity: 'error' })
-    }
-  }
-
   // Supprimer une vente
   const handleDeleteVente = async () => {
     if (venteToDelete) {
@@ -1032,10 +1013,10 @@ const Ventes = () => {
   const VenteAvatar = ({ vente }) => (
     <Avatar
       sx={{
-        bgcolor: getStatutColor(vente.statut) === 'success' ? theme.palette.success.main :
-                 getStatutColor(vente.statut) === 'warning' ? theme.palette.warning.main :
-                 getStatutColor(vente.statut) === 'error' ? theme.palette.error.main :
-                 theme.palette.primary.main,
+        bgcolor: getStatutColor(vente.statut) === 'success' ? darkCayn :
+                 getStatutColor(vente.statut) === 'warning' ? vividOrange :
+                 getStatutColor(vente.statut) === 'error' ? '#d32f2f' :
+                 alpha(darkCayn, 0.8),
         width: 40,
         height: 40
       }}
@@ -1054,7 +1035,7 @@ const Ventes = () => {
         flexDirection: 'column',
         gap: 2
       }}>
-        <CircularProgress size={60} />
+        <CircularProgress size={60} sx={{ color: darkCayn }} />
         <Typography variant="h6" color="textSecondary">
           Chargement des ventes...
         </Typography>
@@ -1069,7 +1050,7 @@ const Ventes = () => {
         <Box>
           <Typography variant="h3" component="h1" gutterBottom sx={{ 
             fontWeight: 'bold',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
@@ -1084,10 +1065,10 @@ const Ventes = () => {
           <Tooltip title="Actualiser les données">
             <IconButton 
               onClick={fetchData}
-              color="primary"
               sx={{ 
-                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+                bgcolor: alpha(darkCayn, 0.1),
+                color: darkCayn,
+                '&:hover': { bgcolor: alpha(darkCayn, 0.2) }
               }}
             >
               <RefreshIcon />
@@ -1095,13 +1076,12 @@ const Ventes = () => {
           </Tooltip>
           <Tooltip title="Nouvelle vente">
             <Fab 
-              color="primary" 
               onClick={handleOpenDialog}
               sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
+                background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
+                boxShadow: `0 4px 20px ${alpha(darkCayn, 0.3)}`,
                 '&:hover': {
-                  boxShadow: '0 8px 30px rgba(102, 126, 234, 0.4)',
+                  boxShadow: `0 8px 30px ${alpha(darkCayn, 0.4)}`,
                 }
               }}
             >
@@ -1119,7 +1099,6 @@ const Ventes = () => {
             title="TOTAL VENTES"
             value={stats.total}
             subtitle="Toutes transactions"
-            color="primary"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -1128,7 +1107,6 @@ const Ventes = () => {
             title="CONFIRMÉES"
             value={stats.confirmees}
             subtitle={`${stats.total > 0 ? Math.round((stats.confirmees / stats.total) * 100) : 0}%`}
-            color="success"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -1137,7 +1115,6 @@ const Ventes = () => {
             title="CHIFFRE D'AFFAIRES"
             value={`${formatNumber(stats.chiffre_affaires)}€`}
             subtitle="Ventes confirmées"
-            color="info"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -1146,13 +1123,12 @@ const Ventes = () => {
             title="À RECOUVRER"
             value={`${formatNumber(stats.montant_a_recouvrer)}€`}
             subtitle="Montant non payé"
-            color="warning"
           />
         </Grid>
       </Grid>
 
       {/* Barres de recherche et filtres */}
-      <Card sx={{ mb: 3, p: 3, borderRadius: 3 }}>
+      <Card sx={{ mb: 3, p: 3, borderRadius: 3, border: `1px solid ${alpha(darkCayn, 0.1)}` }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={3}>
             <TextField
@@ -1164,25 +1140,33 @@ const Ventes = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon color="action" />
+                    <SearchIcon sx={{ color: darkCayn }} />
                   </InputAdornment>
                 ),
               }}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
+                  '&:hover fieldset': {
+                    borderColor: darkCayn,
+                  },
                 }
               }}
             />
           </Grid>
           <Grid item xs={12} md={2}>
             <FormControl fullWidth>
-              <InputLabel>Statut</InputLabel>
+              <InputLabel sx={{ color: darkCayn }}>Statut</InputLabel>
               <Select
                 value={filterStatut}
                 label="Statut"
                 onChange={(e) => setFilterStatut(e.target.value)}
-                sx={{ borderRadius: 2 }}
+                sx={{ 
+                  borderRadius: 2,
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: darkCayn,
+                  }
+                }}
               >
                 <MenuItem value="">Tous les statuts</MenuItem>
                 <MenuItem value="brouillon">Brouillon</MenuItem>
@@ -1193,12 +1177,17 @@ const Ventes = () => {
           </Grid>
           <Grid item xs={12} md={2}>
             <FormControl fullWidth>
-              <InputLabel>Statut Paiement</InputLabel>
+              <InputLabel sx={{ color: darkCayn }}>Statut Paiement</InputLabel>
               <Select
                 value={filterStatutPaiement}
                 label="Statut Paiement"
                 onChange={(e) => setFilterStatutPaiement(e.target.value)}
-                sx={{ borderRadius: 2 }}
+                sx={{ 
+                  borderRadius: 2,
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: darkCayn,
+                  }
+                }}
               >
                 <MenuItem value="">Tous les statuts</MenuItem>
                 <MenuItem value="non_paye">Non payé</MenuItem>
@@ -1210,12 +1199,17 @@ const Ventes = () => {
           </Grid>
           <Grid item xs={12} md={3}>
             <FormControl fullWidth>
-              <InputLabel>Entrepôt</InputLabel>
+              <InputLabel sx={{ color: darkCayn }}>Entrepôt</InputLabel>
               <Select
                 value={filterEntrepot}
                 label="Entrepôt"
                 onChange={(e) => setFilterEntrepot(e.target.value)}
-                sx={{ borderRadius: 2 }}
+                sx={{ 
+                  borderRadius: 2,
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: darkCayn,
+                  }
+                }}
               >
                 <MenuItem value="">Tous les entrepôts</MenuItem>
                 {entrepots.map((entrepot) => (
@@ -1237,7 +1231,16 @@ const Ventes = () => {
                 setFilterStatutPaiement('')
                 setSearchTerm('')
               }}
-              sx={{ height: '56px', borderRadius: 2 }}
+              sx={{ 
+                height: '56px', 
+                borderRadius: 2,
+                borderColor: darkCayn,
+                color: darkCayn,
+                '&:hover': {
+                  borderColor: vividOrange,
+                  backgroundColor: alpha(vividOrange, 0.04)
+                }
+              }}
             >
               Réinitialiser
             </Button>
@@ -1246,16 +1249,22 @@ const Ventes = () => {
       </Card>
 
       {/* Tableau des ventes */}
-      <Card sx={{ boxShadow: '0 4px 20px rgba(0,0,0,0.1)', borderRadius: 3, overflow: 'hidden' }}>
+      <Card sx={{ 
+        boxShadow: `0 4px 20px ${alpha(darkCayn, 0.1)}`, 
+        borderRadius: 3, 
+        overflow: 'hidden',
+        border: `1px solid ${alpha(darkCayn, 0.1)}`
+      }}>
         <TableContainer>
           <Table>
             <TableHead>
               <TableRow sx={{ 
-                backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                backgroundColor: alpha(darkCayn, 0.04),
                 '& th': { 
                   fontWeight: 'bold', 
                   fontSize: '0.9rem',
-                  borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`
+                  color: darkCayn,
+                  borderBottom: `2px solid ${alpha(darkCayn, 0.2)}`
                 }
               }}>
                 <TableCell>VENTE</TableCell>
@@ -1292,7 +1301,7 @@ const Ventes = () => {
                       '&:last-child td': { borderBottom: 0 },
                       transition: 'all 0.2s ease-in-out',
                       '&:hover': {
-                        backgroundColor: alpha(theme.palette.primary.main, 0.02),
+                        backgroundColor: alpha(darkCayn, 0.02),
                       }
                     }}
                   >
@@ -1300,7 +1309,7 @@ const Ventes = () => {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <VenteAvatar vente={vente} />
                         <Box>
-                          <Typography variant="body1" fontWeight="600">
+                          <Typography variant="body1" fontWeight="600" color={darkCayn}>
                             {vente.numero_vente}
                           </Typography>
                           <Typography variant="caption" color="textSecondary">
@@ -1311,7 +1320,7 @@ const Ventes = () => {
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <PersonIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                        <PersonIcon sx={{ fontSize: 16, color: darkCayn }} />
                         <Typography variant="body2">
                           {vente.client_nom || 'Aucun client'}
                         </Typography>
@@ -1333,7 +1342,11 @@ const Ventes = () => {
                             label={nom}
                             size="small"
                             variant="outlined"
-                            sx={{ fontSize: '0.7rem' }}
+                            sx={{ 
+                              fontSize: '0.7rem',
+                              borderColor: alpha(darkCayn, 0.3),
+                              color: darkCayn
+                            }}
                           />
                         ))}
                         {(vente.entrepots_noms || []).length > 2 && (
@@ -1341,14 +1354,18 @@ const Ventes = () => {
                             <Chip
                               label={`+${(vente.entrepots_noms || []).length - 2}`}
                               size="small"
-                              sx={{ fontSize: '0.7rem' }}
+                              sx={{ 
+                                fontSize: '0.7rem',
+                                backgroundColor: alpha(vividOrange, 0.1),
+                                color: vividOrange
+                              }}
                             />
                           </Tooltip>
                         )}
                       </Box>
                     </TableCell>
                     <TableCell align="right">
-                      <Typography variant="h6" fontWeight="bold" color="success.main">
+                      <Typography variant="h6" fontWeight="bold" color={darkCayn}>
                         {formatNumber(parseFloat(vente.montant_total || 0))} €
                       </Typography>
                       {vente.remise > 0 && (
@@ -1386,7 +1403,14 @@ const Ventes = () => {
                             <LinearProgress 
                               variant="determinate" 
                               value={getPourcentagePaye(vente)} 
-                              sx={{ height: 6, borderRadius: 3 }}
+                              sx={{ 
+                                height: 6, 
+                                borderRadius: 3,
+                                backgroundColor: alpha(darkCayn, 0.1),
+                                '& .MuiLinearProgress-bar': {
+                                  backgroundColor: vividOrange
+                                }
+                              }}
                             />
                             <Typography variant="caption" color="textSecondary">
                               {getPourcentagePaye(vente)}% payé
@@ -1404,11 +1428,11 @@ const Ventes = () => {
                       <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
                         <Tooltip title="Voir les détails">
                           <IconButton 
-                            color="info" 
                             onClick={() => handleOpenDetailsDialog(vente)}
                             sx={{ 
-                              background: alpha(theme.palette.info.main, 0.1),
-                              '&:hover': { background: alpha(theme.palette.info.main, 0.2) }
+                              color: darkCayn,
+                              background: alpha(darkCayn, 0.1),
+                              '&:hover': { background: alpha(darkCayn, 0.2) }
                             }}
                           >
                             <VisibilityIcon />
@@ -1417,11 +1441,11 @@ const Ventes = () => {
 
                         <Tooltip title="Générer facture PDF">
                           <IconButton 
-                            color="secondary" 
                             onClick={() => generatePDF(vente)}
                             sx={{ 
-                              background: alpha(theme.palette.secondary.main, 0.1),
-                              '&:hover': { background: alpha(theme.palette.secondary.main, 0.2) }
+                              color: vividOrange,
+                              background: alpha(vividOrange, 0.1),
+                              '&:hover': { background: alpha(vividOrange, 0.2) }
                             }}
                           >
                             <PdfIcon />
@@ -1432,11 +1456,11 @@ const Ventes = () => {
                           <>
                             <Tooltip title="Modifier la vente">
                               <IconButton 
-                                color="primary" 
                                 onClick={() => handleOpenEditDialog(vente)}
                                 sx={{ 
-                                  background: alpha(theme.palette.primary.main, 0.1),
-                                  '&:hover': { background: alpha(theme.palette.primary.main, 0.2) }
+                                  color: darkCayn,
+                                  background: alpha(darkCayn, 0.1),
+                                  '&:hover': { background: alpha(darkCayn, 0.2) }
                                 }}
                               >
                                 <EditIcon />
@@ -1447,8 +1471,8 @@ const Ventes = () => {
                                 color="success" 
                                 onClick={() => handleConfirmerVente(vente.id)}
                                 sx={{ 
-                                  background: alpha(theme.palette.success.main, 0.1),
-                                  '&:hover': { background: alpha(theme.palette.success.main, 0.2) }
+                                  background: alpha('#4caf50', 0.1),
+                                  '&:hover': { background: alpha('#4caf50', 0.2) }
                                 }}
                               >
                                 <CheckCircleIcon />
@@ -1459,8 +1483,8 @@ const Ventes = () => {
                                 color="error" 
                                 onClick={() => handleOpenDeleteDialog(vente)}
                                 sx={{ 
-                                  background: alpha(theme.palette.error.main, 0.1),
-                                  '&:hover': { background: alpha(theme.palette.error.main, 0.2) }
+                                  background: alpha('#d32f2f', 0.1),
+                                  '&:hover': { background: alpha('#d32f2f', 0.2) }
                                 }}
                               >
                                 <DeleteIcon />
@@ -1477,8 +1501,8 @@ const Ventes = () => {
                                   color="success" 
                                   onClick={() => handleOpenPaiementDialog(vente)}
                                   sx={{ 
-                                    background: alpha(theme.palette.success.main, 0.1),
-                                    '&:hover': { background: alpha(theme.palette.success.main, 0.2) }
+                                    background: alpha('#4caf50', 0.1),
+                                    '&:hover': { background: alpha('#4caf50', 0.2) }
                                   }}
                                 >
                                   <PointOfSaleIcon />
@@ -1507,6 +1531,11 @@ const Ventes = () => {
           labelRowsPerPage="Lignes par page:"
           labelDisplayedRows={({ from, to, count }) => `${from}-${to} sur ${count}`}
           rowsPerPageOptions={[5, 10, 25, 50]}
+          sx={{
+            '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+              color: darkCayn
+            }
+          }}
         />
       </Card>
 
@@ -1521,7 +1550,7 @@ const Ventes = () => {
         }}
       >
         <DialogTitle sx={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
           color: 'white',
           fontWeight: 'bold'
         }}>
@@ -1533,7 +1562,7 @@ const Ventes = () => {
               {/* Étape 1: Sélection des produits */}
               <Step>
                 <StepLabel>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: darkCayn }}>
                     Sélection des Produits et Entrepôts
                   </Typography>
                 </StepLabel>
@@ -1543,16 +1572,27 @@ const Ventes = () => {
                   </Typography>
                   
                   {formData.lignes_vente.map((ligne, index) => (
-                    <Card key={index} sx={{ mb: 2, p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
+                    <Card key={index} sx={{ 
+                      mb: 2, 
+                      p: 2, 
+                      border: `1px solid ${alpha(darkCayn, 0.2)}`, 
+                      borderRadius: 2,
+                      backgroundColor: alpha(darkCayn, 0.02)
+                    }}>
                       <Grid container spacing={2} alignItems="center">
                         <Grid item xs={12} md={4}>
                           <FormControl fullWidth>
-                            <InputLabel>Produit *</InputLabel>
+                            <InputLabel sx={{ color: darkCayn }}>Produit *</InputLabel>
                             <Select
                               value={ligne.produit}
                               label="Produit *"
                               onChange={(e) => handleLigneChange(index, 'produit', e.target.value)}
                               required
+                              sx={{
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: darkCayn,
+                                }
+                              }}
                             >
                               <MenuItem value="">Sélectionner un produit</MenuItem>
                               {produits.map((produit) => (
@@ -1566,13 +1606,18 @@ const Ventes = () => {
                         
                         <Grid item xs={12} md={3}>
                           <FormControl fullWidth>
-                            <InputLabel>Entrepôt *</InputLabel>
+                            <InputLabel sx={{ color: darkCayn }}>Entrepôt *</InputLabel>
                             <Select
                               value={ligne.entrepot}
                               label="Entrepôt *"
                               onChange={(e) => handleLigneChange(index, 'entrepot', e.target.value)}
                               required
                               disabled={!ligne.produit}
+                              sx={{
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: darkCayn,
+                                }
+                              }}
                             >
                               <MenuItem value="">Sélectionner un entrepôt</MenuItem>
                               {getEntrepotsForProduit(ligne.produit).map((entrepot) => (
@@ -1593,6 +1638,13 @@ const Ventes = () => {
                             onChange={(e) => handleLigneChange(index, 'quantite', e.target.value)}
                             inputProps={{ min: 1 }}
                             required
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                '&:hover fieldset': {
+                                  borderColor: darkCayn,
+                                },
+                              }
+                            }}
                           />
                         </Grid>
                         
@@ -1605,11 +1657,18 @@ const Ventes = () => {
                             onChange={(e) => handleLigneChange(index, 'prix_unitaire', e.target.value)}
                             inputProps={{ min: 0, step: 0.01 }}
                             required
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                '&:hover fieldset': {
+                                  borderColor: darkCayn,
+                                },
+                              }
+                            }}
                           />
                         </Grid>
                         
                         <Grid item xs={12} md={1}>
-                          <Typography variant="body2" sx={{ mt: 2, fontWeight: 600 }}>
+                          <Typography variant="body2" sx={{ mt: 2, fontWeight: 600, color: darkCayn }}>
                             {ligne.produit && ligne.quantite && ligne.prix_unitaire 
                               ? formatNumber(ligne.quantite * parseFloat(ligne.prix_unitaire))
                               : '0.00'} €
@@ -1633,13 +1692,28 @@ const Ventes = () => {
                   <Button 
                     onClick={addLigneVente} 
                     startIcon={<AddIcon />}
-                    sx={{ mt: 1 }}
+                    sx={{ 
+                      mt: 1,
+                      color: darkCayn,
+                      borderColor: darkCayn,
+                      '&:hover': {
+                        borderColor: vividOrange,
+                        backgroundColor: alpha(vividOrange, 0.04)
+                      }
+                    }}
+                    variant="outlined"
                   >
                     Ajouter une ligne
                   </Button>
 
-                  <Card sx={{ mt: 3, p: 2, backgroundColor: alpha(theme.palette.primary.main, 0.04), borderRadius: 2 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                  <Card sx={{ 
+                    mt: 3, 
+                    p: 2, 
+                    backgroundColor: alpha(darkCayn, 0.04), 
+                    borderRadius: 2,
+                    border: `1px solid ${alpha(darkCayn, 0.2)}`
+                  }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: darkCayn }}>
                       Total provisoire: {formatNumber(calculerTotal())} €
                     </Typography>
                   </Card>
@@ -1650,7 +1724,10 @@ const Ventes = () => {
                       onClick={validerEtapeClient}
                       disabled={formData.lignes_vente.filter(l => l.produit && l.entrepot && l.quantite && l.prix_unitaire).length === 0}
                       sx={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
+                        '&:disabled': {
+                          background: alpha(darkCayn, 0.3)
+                        }
                       }}
                     >
                       Continuer vers la finalisation
@@ -1662,7 +1739,7 @@ const Ventes = () => {
               {/* Étape 2: Client et finalisation */}
               <Step>
                 <StepLabel>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: darkCayn }}>
                     Finalisation de la Vente
                   </Typography>
                 </StepLabel>
@@ -1670,12 +1747,17 @@ const Ventes = () => {
                   <Grid container spacing={3}>
                     <Grid item xs={12} sm={6}>
                       <FormControl fullWidth>
-                        <InputLabel>Client (optionnel)</InputLabel>
+                        <InputLabel sx={{ color: darkCayn }}>Client (optionnel)</InputLabel>
                         <Select
                           name="client"
                           value={formData.client}
                           label="Client (optionnel)"
                           onChange={handleInputChange}
+                          sx={{
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                              borderColor: darkCayn,
+                            }
+                          }}
                         >
                           <MenuItem value="">Aucun client</MenuItem>
                           {clients.map((client) => (
@@ -1695,16 +1777,28 @@ const Ventes = () => {
                         value={formData.remise}
                         onChange={handleInputChange}
                         inputProps={{ min: 0, step: 0.01 }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '&:hover fieldset': {
+                              borderColor: darkCayn,
+                            },
+                          }
+                        }}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       <FormControl fullWidth>
-                        <InputLabel>Mode de paiement</InputLabel>
+                        <InputLabel sx={{ color: darkCayn }}>Mode de paiement</InputLabel>
                         <Select
                           name="mode_paiement"
                           value={formData.mode_paiement}
                           label="Mode de paiement"
                           onChange={handleInputChange}
+                          sx={{
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                              borderColor: darkCayn,
+                            }
+                          }}
                         >
                           <MenuItem value="">Sélectionner</MenuItem>
                           <MenuItem value="especes">Espèces</MenuItem>
@@ -1724,6 +1818,13 @@ const Ventes = () => {
                         value={formData.montant_paye}
                         onChange={handleInputChange}
                         inputProps={{ min: 0, step: 0.01 }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '&:hover fieldset': {
+                              borderColor: darkCayn,
+                            },
+                          }
+                        }}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -1735,6 +1836,13 @@ const Ventes = () => {
                         value={formData.date_echeance}
                         onChange={handleInputChange}
                         InputLabelProps={{ shrink: true }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '&:hover fieldset': {
+                              borderColor: darkCayn,
+                            },
+                          }
+                        }}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -1746,12 +1854,25 @@ const Ventes = () => {
                         onChange={handleInputChange}
                         multiline
                         rows={2}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '&:hover fieldset': {
+                              borderColor: darkCayn,
+                            },
+                          }
+                        }}
                       />
                     </Grid>
                   </Grid>
 
-                  <Card sx={{ mt: 3, p: 3, backgroundColor: alpha(theme.palette.success.main, 0.04), borderRadius: 2 }}>
-                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'success.main' }}>
+                  <Card sx={{ 
+                    mt: 3, 
+                    p: 3, 
+                    backgroundColor: alpha(darkCayn, 0.04), 
+                    borderRadius: 2,
+                    border: `1px solid ${alpha(darkCayn, 0.2)}`
+                  }}>
+                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: darkCayn }}>
                       Récapitulatif de la vente
                     </Typography>
                     {formData.lignes_vente.filter(l => l.produit && l.entrepot && l.quantite && l.prix_unitaire).map((ligne, index) => {
@@ -1767,7 +1888,7 @@ const Ventes = () => {
                               Entrepôt: {entrepot?.nom}
                             </Typography>
                           </Box>
-                          <Typography variant="body2" fontWeight="600">
+                          <Typography variant="body2" fontWeight="600" color={darkCayn}>
                             {formatNumber(ligne.quantite * parseFloat(ligne.prix_unitaire))} €
                           </Typography>
                         </Box>
@@ -1776,15 +1897,15 @@ const Ventes = () => {
                     {formData.remise > 0 && (
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                         <Typography variant="body2">Remise</Typography>
-                        <Typography variant="body2" color="error" fontWeight="600">
+                        <Typography variant="body2" color={vividOrange} fontWeight="600">
                           -{formatNumber(parseFloat(formData.remise))} €
                         </Typography>
                       </Box>
                     )}
-                    <Divider sx={{ my: 1 }} />
+                    <Divider sx={{ my: 1, borderColor: alpha(darkCayn, 0.2) }} />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="h6">Total</Typography>
-                      <Typography variant="h6" color="success.main" fontWeight="bold">
+                      <Typography variant="h6" color={darkCayn}>Total</Typography>
+                      <Typography variant="h6" color={darkCayn} fontWeight="bold">
                         {formatNumber(calculerTotal())} €
                       </Typography>
                     </Box>
@@ -1795,7 +1916,15 @@ const Ventes = () => {
                       onClick={() => setActiveStep(0)} 
                       variant="outlined"
                       disabled={submitting}
-                      sx={{ borderRadius: 2 }}
+                      sx={{ 
+                        borderRadius: 2,
+                        borderColor: darkCayn,
+                        color: darkCayn,
+                        '&:hover': {
+                          borderColor: vividOrange,
+                          backgroundColor: alpha(vividOrange, 0.04)
+                        }
+                      }}
                     >
                       Retour aux produits
                     </Button>
@@ -1803,10 +1932,13 @@ const Ventes = () => {
                       variant="contained" 
                       onClick={handleSubmit}
                       disabled={submitting}
-                      startIcon={submitting ? <CircularProgress size={20} /> : <CheckCircleIcon />}
+                      startIcon={submitting ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <CheckCircleIcon />}
                       sx={{ 
                         borderRadius: 2,
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
+                        '&:disabled': {
+                          background: alpha(darkCayn, 0.3)
+                        }
                       }}
                     >
                       {submitting ? 'Création en cours...' : 'Créer la vente'}
@@ -1830,7 +1962,7 @@ const Ventes = () => {
         }}
       >
         <DialogTitle sx={{ 
-          background: 'linear-gradient(135deg, #ffa726 0%, #fb8c00 100%)',
+          background: `linear-gradient(135deg, ${vividOrange} 0%, ${darkCayn} 100%)`,
           color: 'white',
           fontWeight: 'bold'
         }}>
@@ -1841,7 +1973,7 @@ const Ventes = () => {
             <Stepper activeStep={activeStep} orientation="vertical">
               <Step>
                 <StepLabel>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: darkCayn }}>
                     Modification des Produits et Entrepôts
                   </Typography>
                 </StepLabel>
@@ -1851,16 +1983,27 @@ const Ventes = () => {
                   </Typography>
                   
                   {formData.lignes_vente.map((ligne, index) => (
-                    <Card key={index} sx={{ mb: 2, p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
+                    <Card key={index} sx={{ 
+                      mb: 2, 
+                      p: 2, 
+                      border: `1px solid ${alpha(darkCayn, 0.2)}`, 
+                      borderRadius: 2,
+                      backgroundColor: alpha(darkCayn, 0.02)
+                    }}>
                       <Grid container spacing={2} alignItems="center">
                         <Grid item xs={12} md={4}>
                           <FormControl fullWidth>
-                            <InputLabel>Produit *</InputLabel>
+                            <InputLabel sx={{ color: darkCayn }}>Produit *</InputLabel>
                             <Select
                               value={ligne.produit}
                               label="Produit *"
                               onChange={(e) => handleLigneChange(index, 'produit', e.target.value)}
                               required
+                              sx={{
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: darkCayn,
+                                }
+                              }}
                             >
                               <MenuItem value="">Sélectionner un produit</MenuItem>
                               {produits.map((produit) => (
@@ -1874,13 +2017,18 @@ const Ventes = () => {
                         
                         <Grid item xs={12} md={3}>
                           <FormControl fullWidth>
-                            <InputLabel>Entrepôt *</InputLabel>
+                            <InputLabel sx={{ color: darkCayn }}>Entrepôt *</InputLabel>
                             <Select
                               value={ligne.entrepot}
                               label="Entrepôt *"
                               onChange={(e) => handleLigneChange(index, 'entrepot', e.target.value)}
                               required
                               disabled={!ligne.produit}
+                              sx={{
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: darkCayn,
+                                }
+                              }}
                             >
                               <MenuItem value="">Sélectionner un entrepôt</MenuItem>
                               {getEntrepotsForProduit(ligne.produit).map((entrepot) => (
@@ -1901,6 +2049,13 @@ const Ventes = () => {
                             onChange={(e) => handleLigneChange(index, 'quantite', e.target.value)}
                             inputProps={{ min: 1 }}
                             required
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                '&:hover fieldset': {
+                                  borderColor: darkCayn,
+                                },
+                              }
+                            }}
                           />
                         </Grid>
                         
@@ -1913,11 +2068,18 @@ const Ventes = () => {
                             onChange={(e) => handleLigneChange(index, 'prix_unitaire', e.target.value)}
                             inputProps={{ min: 0, step: 0.01 }}
                             required
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                '&:hover fieldset': {
+                                  borderColor: darkCayn,
+                                },
+                              }
+                            }}
                           />
                         </Grid>
                         
                         <Grid item xs={12} md={1}>
-                          <Typography variant="body2" sx={{ mt: 2, fontWeight: 600 }}>
+                          <Typography variant="body2" sx={{ mt: 2, fontWeight: 600, color: darkCayn }}>
                             {ligne.produit && ligne.quantite && ligne.prix_unitaire 
                               ? formatNumber(ligne.quantite * parseFloat(ligne.prix_unitaire))
                               : '0.00'} €
@@ -1941,13 +2103,28 @@ const Ventes = () => {
                   <Button 
                     onClick={addLigneVente} 
                     startIcon={<AddIcon />}
-                    sx={{ mt: 1 }}
+                    sx={{ 
+                      mt: 1,
+                      color: darkCayn,
+                      borderColor: darkCayn,
+                      '&:hover': {
+                        borderColor: vividOrange,
+                        backgroundColor: alpha(vividOrange, 0.04)
+                      }
+                    }}
+                    variant="outlined"
                   >
                     Ajouter une ligne
                   </Button>
 
-                  <Card sx={{ mt: 3, p: 2, backgroundColor: alpha(theme.palette.primary.main, 0.04), borderRadius: 2 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                  <Card sx={{ 
+                    mt: 3, 
+                    p: 2, 
+                    backgroundColor: alpha(darkCayn, 0.04), 
+                    borderRadius: 2,
+                    border: `1px solid ${alpha(darkCayn, 0.2)}`
+                  }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: darkCayn }}>
                       Total provisoire: {formatNumber(calculerTotal())} €
                     </Typography>
                   </Card>
@@ -1958,7 +2135,10 @@ const Ventes = () => {
                       onClick={validerEtapeClient}
                       disabled={formData.lignes_vente.filter(l => l.produit && l.entrepot && l.quantite && l.prix_unitaire).length === 0}
                       sx={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
+                        '&:disabled': {
+                          background: alpha(darkCayn, 0.3)
+                        }
                       }}
                     >
                       Continuer vers la finalisation
@@ -1970,7 +2150,7 @@ const Ventes = () => {
               {/* Étape 2: Client et finalisation */}
               <Step>
                 <StepLabel>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: darkCayn }}>
                     Finalisation de la Modification
                   </Typography>
                 </StepLabel>
@@ -1978,12 +2158,17 @@ const Ventes = () => {
                   <Grid container spacing={3}>
                     <Grid item xs={12} sm={6}>
                       <FormControl fullWidth>
-                        <InputLabel>Client (optionnel)</InputLabel>
+                        <InputLabel sx={{ color: darkCayn }}>Client (optionnel)</InputLabel>
                         <Select
                           name="client"
                           value={formData.client}
                           label="Client (optionnel)"
                           onChange={handleInputChange}
+                          sx={{
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                              borderColor: darkCayn,
+                            }
+                          }}
                         >
                           <MenuItem value="">Aucun client</MenuItem>
                           {clients.map((client) => (
@@ -2003,16 +2188,28 @@ const Ventes = () => {
                         value={formData.remise}
                         onChange={handleInputChange}
                         inputProps={{ min: 0, step: 0.01 }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '&:hover fieldset': {
+                              borderColor: darkCayn,
+                            },
+                          }
+                        }}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       <FormControl fullWidth>
-                        <InputLabel>Mode de paiement</InputLabel>
+                        <InputLabel sx={{ color: darkCayn }}>Mode de paiement</InputLabel>
                         <Select
                           name="mode_paiement"
                           value={formData.mode_paiement}
                           label="Mode de paiement"
                           onChange={handleInputChange}
+                          sx={{
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                              borderColor: darkCayn,
+                            }
+                          }}
                         >
                           <MenuItem value="">Sélectionner</MenuItem>
                           <MenuItem value="especes">Espèces</MenuItem>
@@ -2032,6 +2229,13 @@ const Ventes = () => {
                         value={formData.montant_paye}
                         onChange={handleInputChange}
                         inputProps={{ min: 0, step: 0.01 }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '&:hover fieldset': {
+                              borderColor: darkCayn,
+                            },
+                          }
+                        }}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -2043,6 +2247,13 @@ const Ventes = () => {
                         value={formData.date_echeance}
                         onChange={handleInputChange}
                         InputLabelProps={{ shrink: true }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '&:hover fieldset': {
+                              borderColor: darkCayn,
+                            },
+                          }
+                        }}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -2054,12 +2265,25 @@ const Ventes = () => {
                         onChange={handleInputChange}
                         multiline
                         rows={2}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '&:hover fieldset': {
+                              borderColor: darkCayn,
+                            },
+                          }
+                        }}
                       />
                     </Grid>
                   </Grid>
 
-                  <Card sx={{ mt: 3, p: 3, backgroundColor: alpha(theme.palette.success.main, 0.04), borderRadius: 2 }}>
-                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'success.main' }}>
+                  <Card sx={{ 
+                    mt: 3, 
+                    p: 3, 
+                    backgroundColor: alpha(darkCayn, 0.04), 
+                    borderRadius: 2,
+                    border: `1px solid ${alpha(darkCayn, 0.2)}`
+                  }}>
+                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: darkCayn }}>
                       Récapitulatif de la vente
                     </Typography>
                     {formData.lignes_vente.filter(l => l.produit && l.entrepot && l.quantite && l.prix_unitaire).map((ligne, index) => {
@@ -2075,7 +2299,7 @@ const Ventes = () => {
                               Entrepôt: {entrepot?.nom}
                             </Typography>
                           </Box>
-                          <Typography variant="body2" fontWeight="600">
+                          <Typography variant="body2" fontWeight="600" color={darkCayn}>
                             {formatNumber(ligne.quantite * parseFloat(ligne.prix_unitaire))} €
                           </Typography>
                         </Box>
@@ -2084,15 +2308,15 @@ const Ventes = () => {
                     {formData.remise > 0 && (
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                         <Typography variant="body2">Remise</Typography>
-                        <Typography variant="body2" color="error" fontWeight="600">
+                        <Typography variant="body2" color={vividOrange} fontWeight="600">
                           -{formatNumber(parseFloat(formData.remise))} €
                         </Typography>
                       </Box>
                     )}
-                    <Divider sx={{ my: 1 }} />
+                    <Divider sx={{ my: 1, borderColor: alpha(darkCayn, 0.2) }} />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="h6">Total</Typography>
-                      <Typography variant="h6" color="success.main" fontWeight="bold">
+                      <Typography variant="h6" color={darkCayn}>Total</Typography>
+                      <Typography variant="h6" color={darkCayn} fontWeight="bold">
                         {formatNumber(calculerTotal())} €
                       </Typography>
                     </Box>
@@ -2103,7 +2327,15 @@ const Ventes = () => {
                       onClick={() => setActiveStep(0)} 
                       variant="outlined"
                       disabled={submitting}
-                      sx={{ borderRadius: 2 }}
+                      sx={{ 
+                        borderRadius: 2,
+                        borderColor: darkCayn,
+                        color: darkCayn,
+                        '&:hover': {
+                          borderColor: vividOrange,
+                          backgroundColor: alpha(vividOrange, 0.04)
+                        }
+                      }}
                     >
                       Retour aux produits
                     </Button>
@@ -2111,10 +2343,13 @@ const Ventes = () => {
                       variant="contained" 
                       onClick={handleEditSubmit}
                       disabled={submitting}
-                      startIcon={submitting ? <CircularProgress size={20} /> : <CheckCircleIcon />}
+                      startIcon={submitting ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <CheckCircleIcon />}
                       sx={{ 
                         borderRadius: 2,
-                        background: 'linear-gradient(135deg, #ffa726 0%, #fb8c00 100%)',
+                        background: `linear-gradient(135deg, ${vividOrange} 0%, ${darkCayn} 100%)`,
+                        '&:disabled': {
+                          background: alpha(darkCayn, 0.3)
+                        }
                       }}
                     >
                       {submitting ? 'Modification en cours...' : 'Modifier la vente'}
@@ -2138,7 +2373,7 @@ const Ventes = () => {
         }}
       >
         <DialogTitle sx={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
           color: 'white',
           fontWeight: 'bold'
         }}>
@@ -2149,20 +2384,20 @@ const Ventes = () => {
             <Box sx={{ pt: 2 }}>
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid item xs={12} sm={6}>
-                  <Card variant="outlined" sx={{ p: 2 }}>
+                  <Card variant="outlined" sx={{ p: 2, borderColor: alpha(darkCayn, 0.2) }}>
                     <Typography variant="subtitle2" color="textSecondary" gutterBottom>Client</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <PersonIcon color="primary" sx={{ fontSize: 20 }} />
-                      <Typography variant="body1" fontWeight="600">
+                      <PersonIcon sx={{ fontSize: 20, color: darkCayn }} />
+                      <Typography variant="body1" fontWeight="600" color={darkCayn}>
                         {selectedVente.client_nom || 'Aucun client'}
                       </Typography>
                     </Box>
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Card variant="outlined" sx={{ p: 2 }}>
+                  <Card variant="outlined" sx={{ p: 2, borderColor: alpha(darkCayn, 0.2) }}>
                     <Typography variant="subtitle2" color="textSecondary" gutterBottom>Date</Typography>
-                    <Typography variant="body1" fontWeight="600">
+                    <Typography variant="body1" fontWeight="600" color={darkCayn}>
                       {new Date(selectedVente.created_at).toLocaleDateString('fr-FR')}
                     </Typography>
                     <Typography variant="caption" color="textSecondary">
@@ -2171,7 +2406,7 @@ const Ventes = () => {
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Card variant="outlined" sx={{ p: 2 }}>
+                  <Card variant="outlined" sx={{ p: 2, borderColor: alpha(darkCayn, 0.2) }}>
                     <Typography variant="subtitle2" color="textSecondary" gutterBottom>Statut</Typography>
                     <Chip
                       label={getStatutLabel(selectedVente.statut)}
@@ -2181,15 +2416,15 @@ const Ventes = () => {
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Card variant="outlined" sx={{ p: 2 }}>
+                  <Card variant="outlined" sx={{ p: 2, borderColor: alpha(darkCayn, 0.2) }}>
                     <Typography variant="subtitle2" color="textSecondary" gutterBottom>Créé par</Typography>
-                    <Typography variant="body1" fontWeight="600">
+                    <Typography variant="body1" fontWeight="600" color={darkCayn}>
                       {selectedVente.created_by_email}
                     </Typography>
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Card variant="outlined" sx={{ p: 2 }}>
+                  <Card variant="outlined" sx={{ p: 2, borderColor: alpha(darkCayn, 0.2) }}>
                     <Typography variant="subtitle2" color="textSecondary" gutterBottom>Statut Paiement</Typography>
                     <Chip
                       label={getStatutPaiementLabel(selectedVente)}
@@ -2201,7 +2436,14 @@ const Ventes = () => {
                         <LinearProgress 
                           variant="determinate" 
                           value={getPourcentagePaye(selectedVente)} 
-                          sx={{ height: 6, borderRadius: 3 }}
+                          sx={{ 
+                            height: 6, 
+                            borderRadius: 3,
+                            backgroundColor: alpha(darkCayn, 0.1),
+                            '& .MuiLinearProgress-bar': {
+                              backgroundColor: vividOrange
+                            }
+                          }}
                         />
                         <Typography variant="caption" color="textSecondary">
                           {getPourcentagePaye(selectedVente)}% payé
@@ -2211,9 +2453,9 @@ const Ventes = () => {
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Card variant="outlined" sx={{ p: 2 }}>
+                  <Card variant="outlined" sx={{ p: 2, borderColor: alpha(darkCayn, 0.2) }}>
                     <Typography variant="subtitle2" color="textSecondary" gutterBottom>Mode de paiement</Typography>
-                    <Typography variant="body1" fontWeight="600">
+                    <Typography variant="body1" fontWeight="600" color={darkCayn}>
                       {selectedVente.mode_paiement ? 
                         selectedVente.mode_paiement.charAt(0).toUpperCase() + selectedVente.mode_paiement.slice(1).replace('_', ' ') 
                         : 'Non spécifié'}
@@ -2222,9 +2464,9 @@ const Ventes = () => {
                 </Grid>
                 {selectedVente.date_echeance && (
                   <Grid item xs={12}>
-                    <Card variant="outlined" sx={{ p: 2 }}>
+                    <Card variant="outlined" sx={{ p: 2, borderColor: alpha(darkCayn, 0.2) }}>
                       <Typography variant="subtitle2" color="textSecondary" gutterBottom>Échéance de paiement</Typography>
-                      <Typography variant="body1" fontWeight="600">
+                      <Typography variant="body1" fontWeight="600" color={darkCayn}>
                         {new Date(selectedVente.date_echeance).toLocaleDateString('fr-FR')}
                         {new Date(selectedVente.date_echeance) < new Date() && selectedVente.statut_paiement !== 'paye' && (
                           <Typography variant="caption" color="error" sx={{ ml: 2 }}>
@@ -2237,45 +2479,56 @@ const Ventes = () => {
                 )}
               </Grid>
 
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>Produits de la vente</Typography>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: darkCayn }}>Produits de la vente</Typography>
               {selectedVente.lignes_vente && selectedVente.lignes_vente.length > 0 ? (
-                <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+                <TableContainer component={Paper} variant="outlined" sx={{ 
+                  borderRadius: 2,
+                  borderColor: alpha(darkCayn, 0.2)
+                }}>
                   <Table>
                     <TableHead>
-                      <TableRow sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.04) }}>
-                        <TableCell sx={{ fontWeight: 600 }}>Produit</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Entrepôt</TableCell>
-                        <TableCell align="center" sx={{ fontWeight: 600 }}>Quantité</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 600 }}>Prix unitaire</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 600 }}>Sous-total</TableCell>
+                      <TableRow sx={{ backgroundColor: alpha(darkCayn, 0.04) }}>
+                        <TableCell sx={{ fontWeight: 600, color: darkCayn }}>Produit</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: darkCayn }}>Entrepôt</TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 600, color: darkCayn }}>Quantité</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600, color: darkCayn }}>Prix unitaire</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600, color: darkCayn }}>Sous-total</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {selectedVente.lignes_vente.map((ligne, index) => (
                         <TableRow key={index}>
                           <TableCell>
-                            <Typography variant="body2" fontWeight="500">
+                            <Typography variant="body2" fontWeight="500" color={darkCayn}>
                               {ligne.produit_nom}
                             </Typography>
                           </TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <WarehouseIcon fontSize="small" color="action" />
-                              <Typography variant="body2">
+                              <WarehouseIcon fontSize="small" sx={{ color: darkCayn }} />
+                              <Typography variant="body2" color={darkCayn}>
                                 {ligne.entrepot_nom}
                               </Typography>
                             </Box>
                           </TableCell>
                           <TableCell align="center">
-                            <Chip label={ligne.quantite} size="small" color="primary" />
+                            <Chip 
+                              label={ligne.quantite} 
+                              size="small" 
+                              sx={{ 
+                                backgroundColor: alpha(vividOrange, 0.1),
+                                color: vividOrange,
+                                border: `1px solid ${alpha(vividOrange, 0.3)}`
+                              }} 
+                            />
                           </TableCell>
                           <TableCell align="right">
-                            <Typography variant="body2">
+                            <Typography variant="body2" color={darkCayn}>
                               {formatNumber(parseFloat(ligne.prix_unitaire))} €
                             </Typography>
                           </TableCell>
                           <TableCell align="right">
-                            <Typography variant="body2" fontWeight="600">
+                            <Typography variant="body2" fontWeight="600" color={darkCayn}>
                               {ligne.sous_total ? formatNumber(parseFloat(ligne.sous_total)) : formatNumber(ligne.quantite * parseFloat(ligne.prix_unitaire))} €
                             </Typography>
                           </TableCell>
@@ -2290,13 +2543,19 @@ const Ventes = () => {
                 </Typography>
               )}
 
-              <Card sx={{ mt: 3, p: 3, background: alpha(theme.palette.success.main, 0.1), borderRadius: 2 }}>
+              <Card sx={{ 
+                mt: 3, 
+                p: 3, 
+                background: alpha(darkCayn, 0.04), 
+                borderRadius: 2,
+                border: `1px solid ${alpha(darkCayn, 0.2)}`
+              }}>
                 <Grid container spacing={2}>
                   <Grid item xs={6}>
                     <Typography variant="body2" color="textSecondary">Montant total:</Typography>
                   </Grid>
                   <Grid item xs={6} textAlign="right">
-                    <Typography variant="h6" fontWeight="bold">
+                    <Typography variant="h6" fontWeight="bold" color={darkCayn}>
                       {formatNumber(parseFloat(selectedVente.montant_total || 0))} €
                     </Typography>
                   </Grid>
@@ -2304,7 +2563,7 @@ const Ventes = () => {
                     <Typography variant="body2" color="textSecondary">Remise appliquée:</Typography>
                   </Grid>
                   <Grid item xs={6} textAlign="right">
-                    <Typography variant="body2" fontWeight="600">
+                    <Typography variant="body2" fontWeight="600" color={darkCayn}>
                       {formatNumber(parseFloat(selectedVente.remise || 0))} €
                     </Typography>
                   </Grid>
@@ -2312,15 +2571,15 @@ const Ventes = () => {
                     <Typography variant="body2" color="textSecondary">Montant payé:</Typography>
                   </Grid>
                   <Grid item xs={6} textAlign="right">
-                    <Typography variant="body2" color="success.main" fontWeight="600">
+                    <Typography variant="body2" color={vividOrange} fontWeight="600">
                       {formatNumber(parseFloat(selectedVente.montant_paye || 0))} €
                     </Typography>
                   </Grid>
                   <Grid item xs={6}>
-                    <Typography variant="h6">Montant restant:</Typography>
+                    <Typography variant="h6" color={darkCayn}>Montant restant:</Typography>
                   </Grid>
                   <Grid item xs={6} textAlign="right">
-                    <Typography variant="h4" color={selectedVente.montant_restant > 0 ? "warning.main" : "success.main"} fontWeight="bold">
+                    <Typography variant="h4" color={selectedVente.montant_restant > 0 ? vividOrange : darkCayn} fontWeight="bold">
                       {formatNumber(parseFloat(selectedVente.montant_restant || 0))} €
                     </Typography>
                   </Grid>
@@ -2333,7 +2592,15 @@ const Ventes = () => {
           <Button 
             onClick={handleCloseDetailsDialog}
             variant="outlined"
-            sx={{ borderRadius: 2 }}
+            sx={{ 
+              borderRadius: 2,
+              borderColor: darkCayn,
+              color: darkCayn,
+              '&:hover': {
+                borderColor: vividOrange,
+                backgroundColor: alpha(vividOrange, 0.04)
+              }
+            }}
           >
             Fermer
           </Button>
@@ -2344,7 +2611,7 @@ const Ventes = () => {
               onClick={() => handleOpenPaiementDialog(selectedVente)}
               sx={{ 
                 borderRadius: 2,
-                background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
+                background: `linear-gradient(135deg, ${vividOrange} 0%, ${darkCayn} 100%)`,
               }}
             >
               Enregistrer Paiement
@@ -2357,7 +2624,7 @@ const Ventes = () => {
               onClick={() => generatePDF(selectedVente)}
               sx={{ 
                 borderRadius: 2,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
               }}
             >
               Générer Facture PDF
@@ -2377,7 +2644,7 @@ const Ventes = () => {
         }}
       >
         <DialogTitle sx={{ 
-          background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
+          background: `linear-gradient(135deg, ${vividOrange} 0%, ${darkCayn} 100%)`,
           color: 'white',
           fontWeight: 'bold'
         }}>
@@ -2386,22 +2653,27 @@ const Ventes = () => {
         <DialogContent sx={{ p: 3 }}>
           {ventePourPaiement && (
             <Box sx={{ pt: 2 }}>
-              <Card sx={{ mb: 3, p: 2, backgroundColor: alpha(theme.palette.info.main, 0.05) }}>
+              <Card sx={{ 
+                mb: 3, 
+                p: 2, 
+                backgroundColor: alpha(darkCayn, 0.05),
+                border: `1px solid ${alpha(darkCayn, 0.2)}`
+              }}>
                 <Typography variant="subtitle2" color="textSecondary">Vente</Typography>
-                <Typography variant="h6" fontWeight="600">
+                <Typography variant="h6" fontWeight="600" color={darkCayn}>
                   {ventePourPaiement.numero_vente}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
                   Client: {ventePourPaiement.client_nom || 'Aucun client'}
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                  <Typography variant="body2">
+                  <Typography variant="body2" color={darkCayn}>
                     Total: {formatNumber(parseFloat(ventePourPaiement.montant_total || 0))} €
                   </Typography>
-                  <Typography variant="body2" color="success.main">
+                  <Typography variant="body2" color={vividOrange}>
                     Payé: {formatNumber(parseFloat(ventePourPaiement.montant_paye || 0))} €
                   </Typography>
-                  <Typography variant="body2" color="warning.main">
+                  <Typography variant="body2" color={darkCayn}>
                     Reste: {formatNumber(parseFloat(ventePourPaiement.montant_restant || 0))} €
                   </Typography>
                 </Box>
@@ -2422,16 +2694,28 @@ const Ventes = () => {
                       step: 0.01
                     }}
                     required
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: darkCayn,
+                        },
+                      }
+                    }}
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <FormControl fullWidth required>
-                    <InputLabel>Mode de paiement *</InputLabel>
+                    <InputLabel sx={{ color: darkCayn }}>Mode de paiement *</InputLabel>
                     <Select
                       name="mode_paiement"
                       value={formPaiement.mode_paiement}
                       label="Mode de paiement *"
                       onChange={handlePaiementChange}
+                      sx={{
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: darkCayn,
+                        }
+                      }}
                     >
                       <MenuItem value="especes">Espèces</MenuItem>
                       <MenuItem value="carte_bancaire">Carte bancaire</MenuItem>
@@ -2449,6 +2733,13 @@ const Ventes = () => {
                     value={formPaiement.reference}
                     onChange={handlePaiementChange}
                     placeholder="N° chèque, référence virement..."
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: darkCayn,
+                        },
+                      }
+                    }}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -2460,15 +2751,22 @@ const Ventes = () => {
                     onChange={handlePaiementChange}
                     multiline
                     rows={2}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: darkCayn,
+                        },
+                      }
+                    }}
                   />
                 </Grid>
               </Grid>
 
               {ventePourPaiement.date_echeance && (
-                <Alert severity="info" sx={{ mt: 2 }}>
+                <Alert severity="info" sx={{ mt: 2, border: `1px solid ${alpha(darkCayn, 0.2)}` }}>
                   Échéance: {new Date(ventePourPaiement.date_echeance).toLocaleDateString('fr-FR')}
                   {new Date(ventePourPaiement.date_echeance) < new Date() && (
-                    <Typography variant="body2" color="error">
+                    <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                       Date d'échéance dépassée!
                     </Typography>
                   )}
@@ -2482,7 +2780,15 @@ const Ventes = () => {
             onClick={handleClosePaiementDialog}
             variant="outlined"
             disabled={submitting}
-            sx={{ borderRadius: 2 }}
+            sx={{ 
+              borderRadius: 2,
+              borderColor: darkCayn,
+              color: darkCayn,
+              '&:hover': {
+                borderColor: vividOrange,
+                backgroundColor: alpha(vividOrange, 0.04)
+              }
+            }}
           >
             Annuler
           </Button>
@@ -2490,10 +2796,13 @@ const Ventes = () => {
             variant="contained" 
             onClick={handleEnregistrerPaiement}
             disabled={submitting || formPaiement.montant <= 0 || !formPaiement.mode_paiement}
-            startIcon={submitting ? <CircularProgress size={20} /> : <CheckCircleIcon />}
+            startIcon={submitting ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <CheckCircleIcon />}
             sx={{ 
               borderRadius: 2,
-              background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
+              background: `linear-gradient(135deg, ${vividOrange} 0%, ${darkCayn} 100%)`,
+              '&:disabled': {
+                background: alpha(darkCayn, 0.3)
+              }
             }}
           >
             {submitting ? 'Enregistrement...' : 'Enregistrer le paiement'}
@@ -2520,14 +2829,14 @@ const Ventes = () => {
               width: 80,
               height: 80,
               borderRadius: '50%',
-              backgroundColor: alpha(theme.palette.error.main, 0.1),
+              backgroundColor: alpha('#d32f2f', 0.1),
               margin: '0 auto 20px'
             }}
           >
-            <DeleteIcon sx={{ fontSize: 40, color: 'error.main' }} />
+            <DeleteIcon sx={{ fontSize: 40, color: '#d32f2f' }} />
           </Box>
           
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: darkCayn }}>
             Confirmer la suppression
           </Typography>
           
@@ -2537,7 +2846,12 @@ const Ventes = () => {
           </Typography>
 
           {venteToDelete && (
-            <Card variant="outlined" sx={{ mb: 3, p: 2, textAlign: 'left' }}>
+            <Card variant="outlined" sx={{ 
+              mb: 3, 
+              p: 2, 
+              textAlign: 'left',
+              borderColor: alpha(darkCayn, 0.2)
+            }}>
               <Typography variant="body2" color="textSecondary">
                 <strong>Numéro:</strong> {venteToDelete.numero_vente}
               </Typography>
@@ -2558,18 +2872,26 @@ const Ventes = () => {
           <Button 
             onClick={handleCloseDeleteDialog}
             variant="outlined"
-            sx={{ borderRadius: 2, minWidth: 120 }}
+            sx={{ 
+              borderRadius: 2, 
+              minWidth: 120,
+              borderColor: darkCayn,
+              color: darkCayn,
+              '&:hover': {
+                borderColor: vividOrange,
+                backgroundColor: alpha(vividOrange, 0.04)
+              }
+            }}
           >
             Annuler
           </Button>
           <Button 
             onClick={handleDeleteVente}
             variant="contained"
-            color="error"
             sx={{ 
               borderRadius: 2, 
               minWidth: 120,
-              background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
+              background: 'linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%)',
             }}
           >
             Supprimer
@@ -2592,7 +2914,10 @@ const Ventes = () => {
             borderRadius: 2,
             boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
             width: '100%',
-            maxWidth: 400
+            maxWidth: 400,
+            '& .MuiAlert-icon': {
+              color: 'white'
+            }
           }}
         >
           {snackbar.message}

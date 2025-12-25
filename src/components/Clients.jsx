@@ -26,7 +26,6 @@ import {
   Tooltip,
   Fab,
   alpha,
-  useTheme,
   Avatar,
   InputAdornment,
   MenuItem,
@@ -56,7 +55,11 @@ const Clients = () => {
   const [clientToDelete, setClientToDelete] = useState(null)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
   const [searchTerm, setSearchTerm] = useState('')
-  const theme = useTheme()
+
+  // Couleurs de l'entreprise
+  const darkCayn = '#003C3f'
+  const vividOrange = '#DA4A0E'
+  const black = '#000000'
 
   // Formulaire client
   const [formData, setFormData] = useState({
@@ -209,15 +212,15 @@ const Clients = () => {
   }
 
   // Composant de carte de statistique amélioré
-  const StatsCard = ({ icon, title, value, subtitle, color = 'primary', trend }) => (
+  const StatsCard = ({ icon, title, value, subtitle }) => (
     <Card sx={{ 
       height: '100%', 
-      background: `linear-gradient(135deg, ${alpha(theme.palette[color].main, 0.1)} 0%, ${alpha(theme.palette[color].light, 0.05)} 100%)`,
-      border: `1px solid ${alpha(theme.palette[color].main, 0.2)}`,
+      background: `linear-gradient(135deg, ${alpha(darkCayn, 0.1)} 0%, ${alpha(vividOrange, 0.05)} 100%)`,
+      border: `1px solid ${alpha(darkCayn, 0.2)}`,
       transition: 'all 0.3s ease-in-out',
       '&:hover': { 
         transform: 'translateY(-4px)',
-        boxShadow: `0 8px 25px ${alpha(theme.palette[color].main, 0.15)}`,
+        boxShadow: `0 8px 25px ${alpha(darkCayn, 0.15)}`,
       }
     }}>
       <CardContent>
@@ -226,7 +229,7 @@ const Clients = () => {
             <Typography color="textSecondary" variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
               {title}
             </Typography>
-            <Typography variant="h4" component="div" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', color: darkCayn }}>
               {value}
             </Typography>
             {subtitle && (
@@ -237,7 +240,7 @@ const Clients = () => {
           </Box>
           <Box
             sx={{
-              background: `linear-gradient(135deg, ${theme.palette[color].main} 0%, ${theme.palette[color].dark} 100%)`,
+              background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
               color: 'white',
               borderRadius: 3,
               p: 2,
@@ -257,7 +260,7 @@ const Clients = () => {
   const ClientAvatar = ({ client }) => (
     <Avatar
       sx={{
-        bgcolor: client.type_client === 'particulier' ? theme.palette.primary.main : theme.palette.secondary.main,
+        bgcolor: client.type_client === 'particulier' ? darkCayn : vividOrange,
         width: 40,
         height: 40
       }}
@@ -276,7 +279,7 @@ const Clients = () => {
         flexDirection: 'column',
         gap: 2
       }}>
-        <CircularProgress size={60} />
+        <CircularProgress size={60} sx={{ color: darkCayn }} />
         <Typography variant="h6" color="textSecondary">
           Chargement des clients...
         </Typography>
@@ -285,13 +288,13 @@ const Clients = () => {
   }
 
   return (
-    <Box sx={{ p: 3, minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}>
+    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'background.default' }}>
       {/* En-tête avec titre et bouton d'ajout */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Box>
           <Typography variant="h3" component="h1" gutterBottom sx={{ 
             fontWeight: 'bold',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
@@ -304,13 +307,12 @@ const Clients = () => {
         </Box>
         <Tooltip title="Ajouter un nouveau client">
           <Fab 
-            color="primary" 
             onClick={() => handleOpenDialog()}
             sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
+              background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
+              boxShadow: `0 4px 20px ${alpha(darkCayn, 0.3)}`,
               '&:hover': {
-                boxShadow: '0 8px 30px rgba(102, 126, 234, 0.4)',
+                boxShadow: `0 8px 30px ${alpha(darkCayn, 0.4)}`,
               }
             }}
           >
@@ -327,7 +329,6 @@ const Clients = () => {
             title="TOTAL CLIENTS"
             value={stats.total}
             subtitle="Clients actifs"
-            color="primary"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
@@ -336,7 +337,6 @@ const Clients = () => {
             title="PARTICULIERS"
             value={stats.particuliers}
             subtitle={`${stats.total > 0 ? Math.round((stats.particuliers / stats.total) * 100) : 0}% du total`}
-            color="success"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
@@ -345,13 +345,17 @@ const Clients = () => {
             title="PROFESSIONNELS"
             value={stats.professionnels}
             subtitle={`${stats.total > 0 ? Math.round((stats.professionnels / stats.total) * 100) : 0}% du total`}
-            color="info"
           />
         </Grid>
       </Grid>
 
       {/* Barre de recherche améliorée */}
-      <Card sx={{ mb: 3, p: 2 }}>
+      <Card sx={{ 
+        mb: 3, 
+        p: 2,
+        borderRadius: 3,
+        border: `1px solid ${alpha(darkCayn, 0.1)}`
+      }}>
         <TextField
           fullWidth
           variant="outlined"
@@ -361,29 +365,37 @@ const Clients = () => {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon color="action" />
+                <SearchIcon sx={{ color: darkCayn }} />
               </InputAdornment>
             ),
           }}
           sx={{
             '& .MuiOutlinedInput-root': {
               borderRadius: 2,
+              '&:hover fieldset': {
+                borderColor: darkCayn,
+              },
             }
           }}
         />
       </Card>
 
       {/* Tableau des clients amélioré */}
-      <Card sx={{ boxShadow: '0 4px 20px rgba(0,0,0,0.1)', borderRadius: 3 }}>
+      <Card sx={{ 
+        boxShadow: `0 4px 20px ${alpha(darkCayn, 0.1)}`, 
+        borderRadius: 3,
+        border: `1px solid ${alpha(darkCayn, 0.1)}`
+      }}>
         <TableContainer>
           <Table>
             <TableHead>
               <TableRow sx={{ 
-                backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                backgroundColor: alpha(darkCayn, 0.04),
                 '& th': { 
                   fontWeight: 'bold', 
                   fontSize: '0.9rem',
-                  borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`
+                  color: darkCayn,
+                  borderBottom: `2px solid ${alpha(darkCayn, 0.2)}`
                 }
               }}>
                 <TableCell>CLIENT</TableCell>
@@ -418,7 +430,7 @@ const Clients = () => {
                       '&:last-child td': { borderBottom: 0 },
                       transition: 'all 0.2s ease-in-out',
                       '&:hover': {
-                        backgroundColor: alpha(theme.palette.primary.main, 0.02),
+                        backgroundColor: alpha(darkCayn, 0.02),
                         transform: 'translateY(-1px)'
                       }
                     }}
@@ -427,7 +439,7 @@ const Clients = () => {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <ClientAvatar client={client} />
                         <Box>
-                          <Typography variant="body1" fontWeight="600">
+                          <Typography variant="body1" fontWeight="600" color={darkCayn}>
                             {client.nom}
                           </Typography>
                           {client.email && (
@@ -442,18 +454,20 @@ const Clients = () => {
                     <TableCell>
                       <Chip
                         label={client.type_client === 'particulier' ? 'Particulier' : 'Professionnel'}
-                        color={client.type_client === 'particulier' ? 'primary' : 'secondary'}
-                        size="small"
                         sx={{ 
                           fontWeight: 600,
-                          borderRadius: 1
+                          borderRadius: 1,
+                          backgroundColor: client.type_client === 'particulier' ? alpha(darkCayn, 0.1) : alpha(vividOrange, 0.1),
+                          color: client.type_client === 'particulier' ? darkCayn : vividOrange,
+                          border: `1px solid ${client.type_client === 'particulier' ? alpha(darkCayn, 0.3) : alpha(vividOrange, 0.3)}`
                         }}
+                        size="small"
                       />
                     </TableCell>
                     <TableCell>
                       {client.telephone ? (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <PhoneIcon sx={{ fontSize: 16, color: 'success.main' }} />
+                          <PhoneIcon sx={{ fontSize: 16, color: darkCayn }} />
                           <Typography variant="body2">
                             {client.telephone}
                           </Typography>
@@ -467,8 +481,8 @@ const Clients = () => {
                     <TableCell>
                       {client.entreprise ? (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <CorporateIcon sx={{ fontSize: 16, color: 'info.main' }} />
-                          <Typography variant="body2" fontWeight="500">
+                          <CorporateIcon sx={{ fontSize: 16, color: darkCayn }} />
+                          <Typography variant="body2" fontWeight="500" color={darkCayn}>
                             {client.entreprise}
                           </Typography>
                         </Box>
@@ -482,7 +496,7 @@ const Clients = () => {
                       {client.adresse ? (
                         <Tooltip title={client.adresse}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <LocationIcon sx={{ fontSize: 16, color: 'warning.main' }} />
+                            <LocationIcon sx={{ fontSize: 16, color: darkCayn }} />
                             <Typography 
                               variant="body2" 
                               sx={{ 
@@ -506,11 +520,14 @@ const Clients = () => {
                       <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
                         <Tooltip title="Modifier le client">
                           <IconButton 
-                            color="primary" 
                             onClick={() => handleOpenDialog(client)}
                             sx={{ 
-                              background: alpha(theme.palette.primary.main, 0.1),
-                              '&:hover': { background: alpha(theme.palette.primary.main, 0.2) }
+                              color: darkCayn,
+                              background: alpha(darkCayn, 0.1),
+                              '&:hover': { 
+                                background: alpha(darkCayn, 0.2),
+                                transform: 'scale(1.1)'
+                              }
                             }}
                           >
                             <EditIcon />
@@ -518,11 +535,14 @@ const Clients = () => {
                         </Tooltip>
                         <Tooltip title="Supprimer le client">
                           <IconButton 
-                            color="error" 
                             onClick={() => handleOpenDeleteDialog(client)}
                             sx={{ 
-                              background: alpha(theme.palette.error.main, 0.1),
-                              '&:hover': { background: alpha(theme.palette.error.main, 0.2) }
+                              color: '#d32f2f',
+                              background: alpha('#d32f2f', 0.1),
+                              '&:hover': { 
+                                background: alpha('#d32f2f', 0.2),
+                                transform: 'scale(1.1)'
+                              }
                             }}
                           >
                             <DeleteIcon />
@@ -549,7 +569,7 @@ const Clients = () => {
         }}
       >
         <DialogTitle sx={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
           color: 'white',
           fontWeight: 'bold'
         }}>
@@ -565,7 +585,14 @@ const Clients = () => {
                 value={formData.nom}
                 onChange={handleInputChange}
                 required
-                sx={{ mb: 2 }}
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: darkCayn,
+                    },
+                  }
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -576,6 +603,13 @@ const Clients = () => {
                 name="type_client"
                 value={formData.type_client}
                 onChange={handleInputChange}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: darkCayn,
+                    },
+                  }
+                }}
               >
                 <MenuItem value="particulier">Particulier</MenuItem>
                 <MenuItem value="professionnel">Professionnel</MenuItem>
@@ -591,9 +625,16 @@ const Clients = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <PhoneIcon color="action" />
+                      <PhoneIcon sx={{ color: darkCayn }} />
                     </InputAdornment>
                   ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: darkCayn,
+                    },
+                  }
                 }}
               />
             </Grid>
@@ -608,9 +649,16 @@ const Clients = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <EmailIcon color="action" />
+                      <EmailIcon sx={{ color: darkCayn }} />
                     </InputAdornment>
                   ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: darkCayn,
+                    },
+                  }
                 }}
               />
             </Grid>
@@ -624,9 +672,16 @@ const Clients = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <CorporateIcon color="action" />
+                      <CorporateIcon sx={{ color: darkCayn }} />
                     </InputAdornment>
                   ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: darkCayn,
+                    },
+                  }
                 }}
               />
             </Grid>
@@ -642,9 +697,16 @@ const Clients = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <LocationIcon color="action" />
+                      <LocationIcon sx={{ color: darkCayn }} />
                     </InputAdornment>
                   ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: darkCayn,
+                    },
+                  }
                 }}
               />
             </Grid>
@@ -658,6 +720,13 @@ const Clients = () => {
                 value={formData.notes}
                 onChange={handleInputChange}
                 placeholder="Informations supplémentaires sur le client..."
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: darkCayn,
+                    },
+                  }
+                }}
               />
             </Grid>
           </Grid>
@@ -666,7 +735,15 @@ const Clients = () => {
           <Button 
             onClick={handleCloseDialog}
             variant="outlined"
-            sx={{ borderRadius: 2 }}
+            sx={{ 
+              borderRadius: 2,
+              borderColor: darkCayn,
+              color: darkCayn,
+              '&:hover': {
+                borderColor: vividOrange,
+                backgroundColor: alpha(vividOrange, 0.04)
+              }
+            }}
           >
             Annuler
           </Button>
@@ -676,7 +753,10 @@ const Clients = () => {
             disabled={!formData.nom.trim()}
             sx={{ 
               borderRadius: 2,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: `linear-gradient(135deg, ${darkCayn} 0%, ${vividOrange} 100%)`,
+              '&:disabled': {
+                background: alpha(darkCayn, 0.3)
+              }
             }}
           >
             {editingClient ? 'Modifier le client' : 'Créer le client'}
@@ -703,14 +783,14 @@ const Clients = () => {
               width: 80,
               height: 80,
               borderRadius: '50%',
-              backgroundColor: alpha(theme.palette.error.main, 0.1),
+              backgroundColor: alpha('#d32f2f', 0.1),
               margin: '0 auto 20px'
             }}
           >
-            <DeleteIcon sx={{ fontSize: 40, color: 'error.main' }} />
+            <DeleteIcon sx={{ fontSize: 40, color: '#d32f2f' }} />
           </Box>
           
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: darkCayn }}>
             Confirmer la suppression
           </Typography>
           
@@ -720,7 +800,12 @@ const Clients = () => {
           </Typography>
 
           {clientToDelete && (
-            <Card variant="outlined" sx={{ mb: 3, p: 2, textAlign: 'left' }}>
+            <Card variant="outlined" sx={{ 
+              mb: 3, 
+              p: 2, 
+              textAlign: 'left',
+              borderColor: alpha(darkCayn, 0.2)
+            }}>
               <Typography variant="body2" color="textSecondary">
                 <strong>Nom:</strong> {clientToDelete.nom}
               </Typography>
@@ -742,18 +827,26 @@ const Clients = () => {
           <Button 
             onClick={handleCloseDeleteDialog}
             variant="outlined"
-            sx={{ borderRadius: 2, minWidth: 120 }}
+            sx={{ 
+              borderRadius: 2, 
+              minWidth: 120,
+              borderColor: darkCayn,
+              color: darkCayn,
+              '&:hover': {
+                borderColor: vividOrange,
+                backgroundColor: alpha(vividOrange, 0.04)
+              }
+            }}
           >
             Annuler
           </Button>
           <Button 
             onClick={handleDelete}
             variant="contained"
-            color="error"
             sx={{ 
               borderRadius: 2, 
               minWidth: 120,
-              background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
+              background: 'linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%)',
             }}
           >
             Supprimer
@@ -771,9 +864,15 @@ const Clients = () => {
         <Alert 
           onClose={() => setSnackbar({ ...snackbar, open: false })} 
           severity={snackbar.severity}
+          variant="filled"
           sx={{ 
             borderRadius: 2,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            width: '100%',
+            maxWidth: 400,
+            '& .MuiAlert-icon': {
+              color: 'white'
+            }
           }}
         >
           {snackbar.message}
