@@ -739,14 +739,14 @@ const generatePDF = async (vente) => {
     doc.setFont('helvetica', 'bold');
     doc.text('Nom:', infoSocieteX + 6, infoY);
     doc.setFont('helvetica', 'normal');
-    doc.text('MSG SARL', infoSocieteX + 18, infoY);
+    doc.text('AFRIKTETIA', infoSocieteX + 18, infoY);
     infoY += 5;
     
     // Adresse: LYMANYA
     doc.setFont('helvetica', 'bold');
     doc.text('Adresse:', infoSocieteX + 6, infoY);
     doc.setFont('helvetica', 'normal');
-    doc.text('LYMANYA', infoSocieteX + 25, infoY);
+    doc.text('RWanda', infoSocieteX + 25, infoY);
     infoY += 5;
     
     // Téléphone
@@ -754,7 +754,7 @@ const generatePDF = async (vente) => {
     doc.text('Tél:', infoSocieteX + 6, infoY);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
-    doc.text('+225 05 45 75 18 / 05 79 51 75', infoSocieteX + 14, infoY);
+    doc.text('+221 --------- / --------------', infoSocieteX + 14, infoY);
     doc.setFontSize(10);
     infoY += 7;
     
@@ -1248,7 +1248,7 @@ const generatePDF = async (vente) => {
     // Nom de l'entreprise
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text('MGS SARL', signatureEntrepriseX + (signatureWidth / 2), yPosition + 22, { align: 'center' });
+    doc.text('AFRITEXIA', signatureEntrepriseX + (signatureWidth / 2), yPosition + 22, { align: 'center' });
     
     // Ligne pour la signature
     doc.setDrawColor(0, 0, 0);
@@ -1281,10 +1281,10 @@ const generatePDF = async (vente) => {
     doc.line(margins.left, footerY - 5, pageWidth - margins.right, footerY - 5);
     
     // Informations de bas de page
-    doc.text('MGS SARL - Capital social: XX XXX € - RCS: XXXXXX - SIRET: XXX XXX XXX XXXXX - TVA: FRXX XXXXXXX', 
+    doc.text('AFRITEXIA - Capital social: XX XXX € - RCS: XXXXXX - SIRET: XXX XXX XXX XXXXX - TVA: FRXX XXXXXXX', 
              pageWidth / 2, footerY, { align: 'center' });
     
-    doc.text('Adresse: Votre adresse complète - Tél: XX XX XX XX XX - Email: contact@mgs-sarl.com', 
+    doc.text('Adresse: Votre adresse complète - Tél: XX XX XX XX XX - Email: contact@afriktexia.com', 
              pageWidth / 2, footerY + 4, { align: 'center' });
     
     doc.text(`Facture générée électroniquement le ${new Date().toLocaleDateString('fr-FR')} - Valide sans signature`, 
