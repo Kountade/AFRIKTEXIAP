@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: votre-frontend
-    # env: static
-    buildCommand: npm run build
-    staticPublishPath: ./dist  # Important : Vite utilise 'dist', pas 'build'
+    name: gestion-commercial-frontend
+    env: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
     routes:
       - type: rewrite
         source: /*
@@ -11,4 +11,4 @@ services:
     headers:
       - path: /*
         name: Cache-Control
-        value: no-cache
+        value: no-cache, no-store, must-revalidate
