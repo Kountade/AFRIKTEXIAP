@@ -1,12 +1,11 @@
-// src/components/Register.jsx
 import '../App.css'
 import {React, useState} from 'react'
-import { Box, MenuItem } from '@mui/material'
+import { Box, MenuItem, TextField } from '@mui/material'
 import MyTextField from './forms/MyTextField'
 import MyPassField from './forms/MyPassField'
 import MyButton from './forms/MyButton'
 import {Link} from 'react-router-dom'
-import {useForm} from 'react-hook-form'
+import {useForm, Controller} from 'react-hook-form'
 import AxiosInstance from './AxiosInstance'
 import { useNavigate } from 'react-router-dom'
 import {yupResolver} from "@hookform/resolvers/yup"
@@ -40,6 +39,9 @@ const Register = () =>{
     const {handleSubmit, control} = useForm({
         resolver: yupResolver(schema),
         defaultValues: {
+            email: '',
+            password: '',
+            password2: '',
             role: 'vendeur'
         }
     })
@@ -52,7 +54,9 @@ const Register = () =>{
         // Retirer password2 car l'API ne l'attend pas
         const { password2, ...submitData } = data;
         
-        // ✅ CORRECTION : Utiliser register/ sans api/auth/
+        // Les valeurs sont déjà en minuscules (admin/vendeur)
+        console.log('📤 Sending role to API:', submitData.role)
+        
         AxiosInstance.post(`register/`, submitData)
         .then((response) => {
             console.log('✅ Registration successful:', response.data)
@@ -134,16 +138,26 @@ const Register = () =>{
                 </Box>
 
                 <Box className={"itemBox"}>
-                    <MyTextField
-                    select
-                    label={"Role"}
-                    name={"role"}
-                    control={control}
-                    disabled={isLoading}
-                    >
-                        <MenuItem value="vendeur">Vendeur</MenuItem>
-                        <MenuItem value="admin">Admin</MenuItem>
-                    </MyTextField>
+                    <Controller
+                        name="role"
+                        control={control}
+                        render={({ field, fieldState: { error } }) => (
+                            <TextField
+                                {...field}
+                                select
+                                label="Role"
+                                fullWidth
+                                error={!!error}
+                                helperText={error?.message}
+                                disabled={isLoading}
+                                variant="outlined"
+                            >
+                                {/* Les valeurs sont en minuscules (admin/vendeur) mais l'affichage est avec majuscule */}
+                                <MenuItem value="vendeur">Vendeur</MenuItem>
+                                <MenuItem value="admin">Admin</MenuItem>
+                            </TextField>
+                        )}
+                    />
                 </Box>
 
                 <Box className={"itemBox"}>
