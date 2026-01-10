@@ -35,12 +35,16 @@ import {
   StepContent,
   CircularProgress,
   alpha,
-  useTheme,
   Avatar,
   InputAdornment,
   Divider,
   TablePagination,
-  LinearProgress
+  LinearProgress,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Collapse
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -58,7 +62,13 @@ import {
   Warehouse as WarehouseIcon,
   Refresh as RefreshIcon,
   FilterList as FilterIcon,
-  AttachMoney as MoneyIcon
+  AttachMoney as MoneyIcon,
+  Info as InfoIcon,
+  Warning as WarningIcon,
+  Error as ErrorIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  Inventory as InventoryIcon
 } from '@mui/icons-material'
 
 import jsPDF from 'jspdf'
@@ -77,6 +87,7 @@ const Ventes = () => {
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false)
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
   const [openPaiementDialog, setOpenPaiementDialog] = useState(false)
+  const [openDebugDialog, setOpenDebugDialog] = useState(false)
   const [selectedVente, setSelectedVente] = useState(null)
   const [editingVente, setEditingVente] = useState(null)
   const [venteToDelete, setVenteToDelete] = useState(null)
@@ -89,6 +100,8 @@ const Ventes = () => {
   const [activeStep, setActiveStep] = useState(0)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [debugInfo, setDebugInfo] = useState([])
+  const [expandedDebug, setExpandedDebug] = useState(false)
 
   // Couleurs de l'entreprise
   const darkCayn = '#003C3f'
@@ -114,6 +127,15 @@ const Ventes = () => {
     notes: ''
   })
 
+  // Formatage des nombres
+  const formatNumber = (number) => {
+    if (typeof number !== 'number') number = parseFloat(number) || 0
+    return new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(number)
+  }
+
   // Récupérer les données
   const fetchData = () => {
     setLoading(true)
@@ -126,6 +148,7 @@ const Ventes = () => {
     .then(([ventesRes, clientsRes, produitsRes, entrepotsRes]) => {
       setVentes(ventesRes.data)
       setClients(clientsRes.data)
+      console.log("Clients chargés:", clientsRes.data)
       setProduits(produitsRes.data)
       setEntrepots(entrepotsRes.data.filter(e => e.actif))
       setLoading(false)
@@ -141,10 +164,45 @@ const Ventes = () => {
     fetchData()
   }, [])
 
+  // Fonction de debug pour vérifier les stocks
+  const debugStocks = async () => {
+    const debugData = []
+    
+    try {
+      // Vérifier tous les produits
+      for (const produit of produits) {
+        const response = await AxiosInstance.get(`stock-disponible/?produit=${produit.id}`)
+        const stocks = response.data?.stocks || []
+        
+        debugData.push({
+          produit: `${produit.nom} (${produit.code})`,
+          stocks: stocks.map(s => ({
+            entrepot: s.entrepot_nom,
+            total: s.quantite_totale,
+            reserve: s.quantite_reservee,
+            disponible: s.quantite_disponible,
+            alerte: s.stock_alerte,
+            en_rupture: s.en_rupture,
+            faible: s.stock_faible
+          }))
+        })
+      }
+      
+      setDebugInfo(debugData)
+      setOpenDebugDialog(true)
+      
+    } catch (error) {
+      console.error('Erreur debug:', error)
+      setSnackbar({ open: true, message: 'Erreur lors du debug', severity: 'error' })
+    }
+  }
+
   // Fonction pour rafraîchir les données d'une vente spécifique
   const refreshVenteDetails = async (venteId) => {
     try {
       const response = await AxiosInstance.get(`ventes/${venteId}/`)
+      console.log("Données de la vente rafraîchies:", response.data)
+      console.log("Client dans les données:", response.data.client)
       return response.data
     } catch (error) {
       console.error('Erreur lors du rafraîchissement:', error)
@@ -152,19 +210,76 @@ const Ventes = () => {
     }
   }
 
-  // Vérifier les stocks disponibles pour un produit dans un entrepôt
+  // Fonction pour vérifier les stocks disponibles - VERSION AMÉLIORÉE
   const checkStockDisponible = async (produitId, entrepotId) => {
-    if (!produitId || !entrepotId) return null
+    if (!produitId || !entrepotId) {
+      console.log("Produit ou entrepôt non spécifié");
+      return { disponible: 0, total: 0, reserve: 0 };
+    }
     
     try {
-      const response = await AxiosInstance.get(`stock-disponible/?produit=${produitId}`)
-      const stock = response.data.stocks.find(s => s.entrepot_id === parseInt(entrepotId))
-      return stock ? stock.quantite_disponible : 0
+      console.log(`Vérification stock pour produit ${produitId}, entrepôt ${entrepotId}`);
+      
+      // Essayer d'abord l'API stock-detail
+      try {
+        const response = await AxiosInstance.get(`stock-detail/?produit=${produitId}&entrepot=${entrepotId}`);
+        
+        if (response.data) {
+          const stock = response.data;
+          console.log("Détails du stock (stock-detail):", stock);
+          
+          return {
+            disponible: stock.quantite_disponible || 0,
+            total: stock.quantite || 0,
+            reserve: stock.quantite_reservee || 0,
+            stock: stock
+          };
+        }
+      } catch (detailError) {
+        console.log("API stock-detail échouée, tentative avec stock-disponible:", detailError);
+      }
+      
+      // Fallback à l'API stock-disponible
+      const response = await AxiosInstance.get(`stock-disponible/?produit=${produitId}`);
+      const stock = response.data?.stocks?.find(s => s.entrepot_id === parseInt(entrepotId));
+      
+      if (stock) {
+        console.log("Détails du stock (stock-disponible):", stock);
+        return {
+          disponible: stock.quantite_disponible || 0,
+          total: stock.quantite_totale || 0,
+          reserve: stock.quantite_reservee || 0,
+          stock: stock
+        };
+      }
+      
+      console.log(`Aucun stock trouvé pour produit ${produitId} dans entrepôt ${entrepotId}`);
+      return { disponible: 0, total: 0, reserve: 0 };
+      
     } catch (error) {
-      console.error('Erreur lors de la vérification du stock:', error)
-      return 0
+      console.error('Erreur lors de la vérification du stock:', error);
+      
+      // En dernier recours, essayer de récupérer directement depuis les produits
+      try {
+        const produit = produits.find(p => p.id == produitId);
+        if (produit && produit.stocks_entrepots) {
+          const stock = produit.stocks_entrepots.find(s => s.entrepot == entrepotId);
+          if (stock) {
+            return {
+              disponible: stock.quantite_disponible || 0,
+              total: stock.quantite || 0,
+              reserve: stock.quantite_reservee || 0,
+              stock: stock
+            };
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback échoué:', fallbackError);
+      }
+      
+      return { disponible: 0, total: 0, reserve: 0 };
     }
-  }
+  };
 
   // Composant de carte de statistique
   const StatsCard = ({ icon, title, value, subtitle }) => (
@@ -231,12 +346,19 @@ const Ventes = () => {
     setEditingVente(vente)
     
     try {
-      // Récupérer les données actualisées de la vente
       const venteActualisee = await refreshVenteDetails(vente.id) || vente
       
-      // Préparer les données du formulaire
+      let clientId = ''
+      if (venteActualisee.client) {
+        if (typeof venteActualisee.client === 'object' && venteActualisee.client !== null) {
+          clientId = venteActualisee.client.id || venteActualisee.client.toString()
+        } else if (typeof venteActualisee.client === 'number' || typeof venteActualisee.client === 'string') {
+          clientId = venteActualisee.client.toString()
+        }
+      }
+      
       const formData = {
-        client: venteActualisee.client?.id || '',
+        client: clientId,
         remise: parseFloat(venteActualisee.remise) || 0,
         mode_paiement: venteActualisee.mode_paiement || '',
         montant_paye: parseFloat(venteActualisee.montant_paye) || 0,
@@ -249,6 +371,13 @@ const Ventes = () => {
           prix_unitaire: parseFloat(ligne.prix_unitaire)
         }))
       }
+      
+      console.log("Données de modification préparées:", {
+        venteClient: venteActualisee.client,
+        clientId: clientId,
+        formDataClient: formData.client,
+        clientsDisponibles: clients
+      })
       
       setFormData(formData)
       setActiveStep(0)
@@ -270,7 +399,6 @@ const Ventes = () => {
 
   // Ouvrir le dialog de détails
   const handleOpenDetailsDialog = async (vente) => {
-    // Rafraîchir les données de la vente avant d'afficher les détails
     const venteActualisee = await refreshVenteDetails(vente.id) || vente
     setSelectedVente(venteActualisee)
     setOpenDetailsDialog(true)
@@ -296,7 +424,6 @@ const Ventes = () => {
 
   // Ouvrir le dialog de paiement
   const handleOpenPaiementDialog = async (vente) => {
-    // Rafraîchir les données de la vente avant d'afficher le dialog de paiement
     const venteActualisee = await refreshVenteDetails(vente.id) || vente
     setVentePourPaiement(venteActualisee)
     setFormPaiement({
@@ -320,6 +447,12 @@ const Ventes = () => {
     })
   }
 
+  // Fermer le dialog de debug
+  const handleCloseDebugDialog = () => {
+    setOpenDebugDialog(false)
+    setDebugInfo([])
+  }
+
   // Gérer les changements du formulaire
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -338,48 +471,80 @@ const Ventes = () => {
     }))
   }
 
-  // Gérer les changements des lignes de vente
+  // Gérer les changements des lignes de vente - VERSION AMÉLIORÉE
   const handleLigneChange = async (index, field, value) => {
-    const updatedLignes = [...formData.lignes_vente]
+    const updatedLignes = [...formData.lignes_vente];
     
     if (field === 'produit' && value) {
-      const produitSelectionne = produits.find(p => p.id == value)
+      const produitSelectionne = produits.find(p => p.id == value);
       if (produitSelectionne) {
         updatedLignes[index] = {
           ...updatedLignes[index],
           produit: value,
           prix_unitaire: produitSelectionne.prix_vente,
-          entrepot: updatedLignes[index].entrepot || '' // Reset entrepot si changement de produit
+          entrepot: updatedLignes[index].entrepot || ''
+        };
+        
+        // Si on a déjà un entrepôt, vérifier le stock
+        if (updatedLignes[index].entrepot) {
+          const stockInfo = await checkStockDisponible(value, updatedLignes[index].entrepot);
+          console.log(`Stock après changement produit:`, stockInfo);
+          
+          if (updatedLignes[index].quantite > stockInfo.disponible) {
+            setSnackbar({ 
+              open: true, 
+              message: `Stock insuffisant: ${stockInfo.disponible} unités disponibles (total: ${stockInfo.total}, réservé: ${stockInfo.reserve})`, 
+              severity: 'warning' 
+            });
+          }
         }
       }
     } else if (field === 'entrepot' && value && updatedLignes[index].produit) {
       updatedLignes[index] = {
         ...updatedLignes[index],
         entrepot: value
-      }
+      };
       
-      // Vérifier le stock disponible
-      const stock = await checkStockDisponible(updatedLignes[index].produit, value)
-      if (stock !== null && stock < updatedLignes[index].quantite) {
+      // Vérifier le stock disponible avec plus de détails
+      const stockInfo = await checkStockDisponible(updatedLignes[index].produit, value);
+      console.log(`Stock pour ${updatedLignes[index].produit} dans entrepôt ${value}:`, stockInfo);
+      
+      if (stockInfo.disponible < updatedLignes[index].quantite) {
         setSnackbar({ 
           open: true, 
-          message: `Stock insuffisant dans cet entrepôt: ${stock} unités disponibles`, 
+          message: `Stock insuffisant: ${stockInfo.disponible} unités disponibles (total: ${stockInfo.total}, réservé: ${stockInfo.reserve})`, 
           severity: 'warning' 
-        })
+        });
       }
     } else {
       updatedLignes[index] = {
         ...updatedLignes[index],
         [field]: field === 'quantite' ? parseInt(value) || 1 : 
                  field === 'prix_unitaire' ? parseFloat(value) || 0 : value
+      };
+      
+      // Si quantité modifiée, vérifier le stock
+      if (field === 'quantite' && updatedLignes[index].produit && updatedLignes[index].entrepot) {
+        const stockInfo = await checkStockDisponible(
+          updatedLignes[index].produit, 
+          updatedLignes[index].entrepot
+        );
+        
+        if (parseInt(value) > stockInfo.disponible) {
+          setSnackbar({ 
+            open: true, 
+            message: `Stock insuffisant: ${stockInfo.disponible} unités disponibles (total: ${stockInfo.total}, réservé: ${stockInfo.reserve})`, 
+            severity: 'warning' 
+          });
+        }
       }
     }
 
     setFormData(prev => ({
       ...prev,
       lignes_vente: updatedLignes
-    }))
-  }
+    }));
+  };
 
   // Ajouter une ligne de vente
   const addLigneVente = () => {
@@ -412,7 +577,7 @@ const Ventes = () => {
   }
 
   // Valider l'étape client
-  const validerEtapeClient = () => {
+  const validerEtapeClient = async () => {
     const lignesValides = formData.lignes_vente.filter(ligne => 
       ligne.produit && ligne.entrepot && ligne.quantite > 0 && ligne.prix_unitaire
     )
@@ -420,6 +585,21 @@ const Ventes = () => {
     if (lignesValides.length === 0) {
       setSnackbar({ open: true, message: 'Ajoutez au moins un produit à la vente', severity: 'error' })
       return false
+    }
+
+    // Vérifier les stocks pour toutes les lignes
+    for (const ligne of lignesValides) {
+      const stockInfo = await checkStockDisponible(ligne.produit, ligne.entrepot);
+      if (ligne.quantite > stockInfo.disponible) {
+        const produit = produits.find(p => p.id == ligne.produit);
+        const entrepot = entrepots.find(e => e.id == ligne.entrepot);
+        setSnackbar({ 
+          open: true, 
+          message: `Stock insuffisant pour ${produit?.nom} dans ${entrepot?.nom}: ${stockInfo.disponible} disponibles (total: ${stockInfo.total}, réservé: ${stockInfo.reserve})`, 
+          severity: 'error' 
+        });
+        return false;
+      }
     }
 
     setActiveStep(1)
@@ -439,6 +619,8 @@ const Ventes = () => {
 
     setSubmitting(true)
 
+    // Important: Ne PAS envoyer le champ 'created_by' depuis le frontend
+    // Le backend gère automatiquement ce champ à partir de l'utilisateur authentifié
     const submitData = {
       client: formData.client || null,
       remise: parseFloat(formData.remise || 0),
@@ -454,6 +636,8 @@ const Ventes = () => {
       }))
     }
 
+    console.log("Données soumises (création) - SANS created_by:", submitData)
+
     AxiosInstance.post('ventes/', submitData)
       .then((response) => {
         setSnackbar({ open: true, message: 'Vente créée avec succès', severity: 'success' })
@@ -462,9 +646,15 @@ const Ventes = () => {
       })
       .catch((err) => {
         console.error('Erreur création vente:', err.response?.data || err)
-        const errorMessage = err.response?.data?.error || 
-                           err.response?.data?.detail || 
-                           'Erreur lors de la création de la vente'
+        let errorMessage = err.response?.data?.error || 
+                         err.response?.data?.detail || 
+                         'Erreur lors de la création de la vente'
+      
+        // Si c'est l'erreur created_by, expliquez-la
+        if (errorMessage.includes('created_by')) {
+          errorMessage = "Erreur de création: Le champ 'created_by' est géré automatiquement par le système"
+        }
+      
         setSnackbar({ open: true, message: errorMessage, severity: 'error' })
       })
       .finally(() => {
@@ -485,6 +675,7 @@ const Ventes = () => {
 
     setSubmitting(true)
 
+    // Important: Ne PAS envoyer le champ 'created_by' dans les modifications
     const submitData = {
       client: formData.client || null,
       remise: parseFloat(formData.remise || 0),
@@ -500,25 +691,28 @@ const Ventes = () => {
       }))
     }
 
-    // Utiliser PATCH
+    console.log("Données soumises (modification) - SANS created_by:", submitData)
+
     AxiosInstance.patch(`ventes/${editingVente.id}/`, submitData)
       .then(async (response) => {
         setSnackbar({ open: true, message: 'Vente modifiée avec succès', severity: 'success' })
         
-        // Rafraîchir les données de cette vente spécifique
         await refreshVenteDetails(editingVente.id)
-        
-        // Rafraîchir toutes les données
         fetchData()
-        
         handleCloseDialog()
       })
       .catch((err) => {
-        console.error('Erreur modification vente:', err)
-        const errorMessage = err.response?.data?.error || 
-                           err.response?.data?.detail || 
-                           err.response?.data?.lignes_vente?.[0] ||
-                           'Erreur lors de la modification de la vente'
+        console.error('Erreur modification vente:', err.response?.data || err)
+        let errorMessage = err.response?.data?.error || 
+                         err.response?.data?.detail || 
+                         err.response?.data?.lignes_vente?.[0] ||
+                         'Erreur lors de la modification de la vente'
+        
+        // Si c'est l'erreur created_by, expliquez-la
+        if (errorMessage.includes('created_by')) {
+          errorMessage = "Erreur de modification: Le champ 'created_by' est géré automatiquement par le système"
+        }
+        
         setSnackbar({ open: true, message: errorMessage, severity: 'error' })
       })
       .finally(() => {
@@ -536,12 +730,8 @@ const Ventes = () => {
       .then(async (response) => {
         setSnackbar({ open: true, message: 'Paiement enregistré avec succès', severity: 'success' })
         
-        // Rafraîchir les données de cette vente spécifique
         await refreshVenteDetails(ventePourPaiement.id)
-        
-        // Rafraîchir toutes les données
         fetchData()
-        
         handleClosePaiementDialog()
       })
       .catch((err) => {
@@ -557,23 +747,24 @@ const Ventes = () => {
       })
   }
 
-  // Formatage des nombres
-  const formatNumber = (number) => {
-    if (typeof number !== 'number') number = parseFloat(number) || 0
-    return new Intl.NumberFormat('fr-FR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(number)
-  }
-
   // Obtenir les entrepôts disponibles pour un produit
   const getEntrepotsForProduit = (produitId) => {
     if (!produitId) return entrepots
     
-    // Dans une implémentation réelle, on filtrerait les entrepôts qui ont ce produit en stock
-    return entrepots
+    // Filtrer les entrepôts qui ont ce produit en stock
+    const produit = produits.find(p => p.id == produitId);
+    if (produit && produit.stocks_entrepots) {
+      const entrepotIds = produit.stocks_entrepots
+        .filter(stock => stock.quantite_disponible > 0)
+        .map(stock => stock.entrepot);
+      
+      return entrepots.filter(e => entrepotIds.includes(e.id));
+    }
+    
+    return entrepots;
   }
 
+  // Générer un PDF
   // Générer un PDF
 const generatePDF = async (vente) => {
   try {
@@ -1331,10 +1522,7 @@ const generatePDF = async (vente) => {
         severity: 'success' 
       })
       
-      // Rafraîchir les données de cette vente spécifique
       await refreshVenteDetails(venteId)
-      
-      // Rafraîchir toutes les données
       fetchData()
     } catch (err) {
       console.error('Error confirming vente:', err)
@@ -1369,7 +1557,6 @@ const generatePDF = async (vente) => {
       case 'partiel': return 'warning'
       case 'retard': return 'error'
       case 'non_paye':
-        // Vérifier si la vente est en retard
         if (vente.date_echeance) {
           const echeance = new Date(vente.date_echeance)
           const aujourdhui = new Date()
@@ -1490,6 +1677,14 @@ const generatePDF = async (vente) => {
     </Avatar>
   )
 
+  // Effet pour déboguer l'affichage du client dans le formulaire de modification
+  useEffect(() => {
+    if (openEditDialog) {
+      console.log("FormData client (dans useEffect):", formData.client)
+      console.log("Client correspondant:", clients.find(c => c.id == formData.client))
+    }
+  }, [openEditDialog, formData.client, clients])
+
   if (loading) {
     return (
       <Box sx={{ 
@@ -1527,7 +1722,28 @@ const generatePDF = async (vente) => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <Tooltip title="Actualiser les données">
+          {/* Bouton debug (seulement en développement) */}
+          {process.env.NODE_ENV === 'development' && (
+            <Tooltip title="Debug Stock">
+              <Button
+                variant="outlined"
+                startIcon={<InfoIcon />}
+                onClick={debugStocks}
+                sx={{ 
+                  borderColor: alpha('#9c27b0', 0.5),
+                  color: '#9c27b0',
+                  '&:hover': {
+                    borderColor: '#9c27b0',
+                    backgroundColor: alpha('#9c27b0', 0.04)
+                  }
+                }}
+              >
+                Debug
+              </Button>
+            </Tooltip>
+          )}
+          
+          <Tooltip title="Actualiser">
             <IconButton 
               onClick={fetchData}
               sx={{ 
@@ -1539,7 +1755,7 @@ const generatePDF = async (vente) => {
               <RefreshIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Nouvelle vente">
+          <Tooltip title="Nouvelle Vente">
             <Fab 
               onClick={handleOpenDialog}
               sx={{
@@ -1656,7 +1872,7 @@ const generatePDF = async (vente) => {
               >
                 <MenuItem value="">Tous les statuts</MenuItem>
                 <MenuItem value="non_paye">Non payé</MenuItem>
-                <MenuItem value="partiel">Payé partiellement</MenuItem>
+                <MenuItem value="partiel">Partiel</MenuItem>
                 <MenuItem value="paye">Payé</MenuItem>
                 <MenuItem value="retard">En retard</MenuItem>
               </Select>
@@ -1749,10 +1965,13 @@ const generatePDF = async (vente) => {
                     <Box sx={{ textAlign: 'center' }}>
                       <ReceiptIcon sx={{ fontSize: 64, color: 'text.secondary', opacity: 0.5, mb: 2 }} />
                       <Typography variant="h6" color="textSecondary" gutterBottom>
-                        {searchTerm || filterStatut || filterEntrepot || filterStatutPaiement ? 'Aucune vente trouvée' : 'Aucune vente enregistrée'}
+                        {searchTerm || filterStatut || filterEntrepot || filterStatutPaiement ? 
+                          'Aucune vente trouvée' : 
+                          'Aucune vente enregistrée'}
                       </Typography>
                       <Typography variant="body2" color="textSecondary">
-                        {!searchTerm && !filterStatut && !filterEntrepot && !filterStatutPaiement && 'Commencez par créer votre première vente'}
+                        {!searchTerm && !filterStatut && !filterEntrepot && !filterStatutPaiement && 
+                          'Commencez par créer votre première vente'}
                       </Typography>
                     </Box>
                   </TableCell>
@@ -1958,23 +2177,19 @@ const generatePDF = async (vente) => {
                           </>
                         )}
 
-                        {vente.statut === 'confirmee' && (
-                          <>
-                            {vente.statut_paiement !== 'paye' && (
-                              <Tooltip title="Enregistrer paiement">
-                                <IconButton 
-                                  color="success" 
-                                  onClick={() => handleOpenPaiementDialog(vente)}
-                                  sx={{ 
-                                    background: alpha('#4caf50', 0.1),
-                                    '&:hover': { background: alpha('#4caf50', 0.2) }
-                                  }}
-                                >
-                                  <PointOfSaleIcon />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                          </>
+                        {vente.statut === 'confirmee' && vente.statut_paiement !== 'paye' && (
+                          <Tooltip title="Enregistrer paiement">
+                            <IconButton 
+                              color="success" 
+                              onClick={() => handleOpenPaiementDialog(vente)}
+                              sx={{ 
+                                background: alpha('#4caf50', 0.1),
+                                '&:hover': { background: alpha('#4caf50', 0.2) }
+                              }}
+                            >
+                              <PointOfSaleIcon />
+                            </IconButton>
+                          </Tooltip>
                         )}
                       </Box>
                     </TableCell>
@@ -2062,7 +2277,7 @@ const generatePDF = async (vente) => {
                               <MenuItem value="">Sélectionner un produit</MenuItem>
                               {produits.map((produit) => (
                                 <MenuItem key={produit.id} value={produit.id}>
-                                  {produit.nom} - {produit.prix_vente} €
+                                  {produit.nom} - Stock: {produit.stock_disponible_total || 0} - {produit.prix_vente} €
                                 </MenuItem>
                               ))}
                             </Select>
@@ -2151,6 +2366,15 @@ const generatePDF = async (vente) => {
                           </Grid>
                         )}
                       </Grid>
+                      
+                      {/* Afficher les informations de stock */}
+                      {ligne.produit && ligne.entrepot && (
+                        <Box sx={{ mt: 1, p: 1, bgcolor: alpha(darkCayn, 0.03), borderRadius: 1 }}>
+                          <Typography variant="caption" color="textSecondary">
+                            Stock: {produits.find(p => p.id == ligne.produit)?.stocks_entrepots?.find(s => s.entrepot == ligne.entrepot)?.quantite_disponible || 0} disponibles
+                          </Typography>
+                        </Box>
+                      )}
                     </Card>
                   ))}
 
@@ -3306,7 +3530,7 @@ const generatePDF = async (vente) => {
           </Typography>
           
           <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
-            Êtes-vous sûr de vouloir supprimer la vente <strong>"{venteToDelete?.numero_vente}"</strong> ? 
+            Êtes-vous sûr de vouloir supprimer la vente <strong style={{ color: '#DA4A0E' }}>"{venteToDelete?.numero_vente}"</strong> ? 
             Cette action est irréversible.
           </Typography>
 
@@ -3360,6 +3584,109 @@ const generatePDF = async (vente) => {
             }}
           >
             Supprimer
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de debug */}
+      <Dialog
+        open={openDebugDialog}
+        onClose={handleCloseDebugDialog}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ 
+          background: `linear-gradient(135deg, #9c27b0 0%, #673ab7 100%)`,
+          color: 'white',
+          fontWeight: 'bold'
+        }}>
+          DEBUG Stock
+        </DialogTitle>
+        <DialogContent sx={{ p: 3, maxHeight: '70vh', overflow: 'auto' }}>
+          <Box sx={{ pt: 2 }}>
+            <Button
+              onClick={() => setExpandedDebug(!expandedDebug)}
+              endIcon={expandedDebug ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              sx={{ mb: 2 }}
+            >
+              {expandedDebug ? 'Masquer les détails' : 'Afficher les détails'}
+            </Button>
+            
+            <List>
+              {debugInfo.map((item, index) => (
+                <Box key={index} sx={{ mb: 3 }}>
+                  <Card sx={{ mb: 1, p: 2, bgcolor: alpha(darkCayn, 0.05) }}>
+                    <Typography variant="h6" color={darkCayn}>
+                      {item.produit}
+                    </Typography>
+                  </Card>
+                  
+                  <Collapse in={expandedDebug}>
+                    <TableContainer component={Paper} variant="outlined">
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Entrepôt</TableCell>
+                            <TableCell align="right">Total</TableCell>
+                            <TableCell align="right">Réservé</TableCell>
+                            <TableCell align="right">Disponible</TableCell>
+                            <TableCell align="center">Alerte</TableCell>
+                            <TableCell align="center">Statut</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {item.stocks.map((stock, stockIndex) => (
+                            <TableRow key={stockIndex}>
+                              <TableCell>{stock.entrepot}</TableCell>
+                              <TableCell align="right">{stock.total}</TableCell>
+                              <TableCell align="right">{stock.reserve}</TableCell>
+                              <TableCell align="right">
+                                <Typography 
+                                  fontWeight={stock.disponible <= stock.alerte ? 'bold' : 'normal'}
+                                  color={stock.disponible === 0 ? 'error' : stock.disponible <= stock.alerte ? 'warning' : 'success'}
+                                >
+                                  {stock.disponible}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">{stock.alerte}</TableCell>
+                              <TableCell align="center">
+                                {stock.en_rupture ? (
+                                  <Chip label="Rupture" size="small" color="error" />
+                                ) : stock.faible ? (
+                                  <Chip label="Faible" size="small" color="warning" />
+                                ) : (
+                                  <Chip label="OK" size="small" color="success" />
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Collapse>
+                </Box>
+              ))}
+            </List>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button 
+            onClick={handleCloseDebugDialog}
+            variant="outlined"
+            sx={{ 
+              borderRadius: 2,
+              borderColor: '#9c27b0',
+              color: '#9c27b0',
+              '&:hover': {
+                borderColor: '#673ab7',
+                backgroundColor: alpha('#673ab7', 0.04)
+              }
+            }}
+          >
+            Fermer
           </Button>
         </DialogActions>
       </Dialog>
