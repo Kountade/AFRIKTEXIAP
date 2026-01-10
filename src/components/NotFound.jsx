@@ -1,37 +1,26 @@
 // src/components/NotFound.jsx
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-// Option 1 : Export par défaut (recommandé)
-const NotFound = () => {
+function NotFound() {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Redirige automatiquement après 5 secondes
+    const timer = setTimeout(() => {
+      navigate('/');
+    }, 5000);
+    
+    return () => clearTimeout(timer);
+  }, [navigate]);
+  
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '60vh',
-      textAlign: 'center',
-      padding: '2rem'
-    }}>
-      <h1 style={{ fontSize: '4rem', color: '#ff4444' }}>404</h1>
-      <h2>Page non trouvée</h2>
-      <p>La page que vous recherchez n'existe pas.</p>
-      <Link 
-        to="/" 
-        style={{
-          marginTop: '1rem',
-          padding: '0.5rem 1rem',
-          backgroundColor: '#007bff',
-          color: 'white',
-          textDecoration: 'none',
-          borderRadius: '4px'
-        }}
-      >
-        Retour à l'accueil
-      </Link>
+    <div>
+      <h1>404 - Page non trouvée</h1>
+      <p>Vous serez redirigé vers l'accueil dans 5 secondes...</p>
     </div>
   );
-};
+}
 
-export default NotFound; // <-- C'EST CETTE LIGNE QUI MANQUE PEUT-ÊTRE
+// AJOUTEZ CETTE LIGNE (très importante) :
+export default NotFound;
