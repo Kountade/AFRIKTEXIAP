@@ -44,7 +44,9 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction
+  ListItemSecondaryAction,
+  Tabs,
+  Tab
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -65,7 +67,9 @@ import {
   AttachMoney as MoneyIcon,
   Inventory as InventoryIcon,
   Category as CategoryIcon,
-  Image as ImageIcon
+  Image as ImageIcon,
+  AllInclusive as AllInclusiveIcon,
+  Info as InfoIcon
 } from '@mui/icons-material'
 
 // Image par défaut si le produit n'a pas d'image
@@ -79,13 +83,14 @@ const PointDeVente = () => {
   const [loading, setLoading] = useState(true)
   const [panier, setPanier] = useState([])
   const [openDialog, setOpenDialog] = useState(false)
-  const [openClientDialog, setOpenClientDialog] = useState(false)
   const [selectedEntrepot, setSelectedEntrepot] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategorie, setFilterCategorie] = useState('')
   const [activeStep, setActiveStep] = useState(0)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
   const [submitting, setSubmitting] = useState(false)
+  const [selectedTab, setSelectedTab] = useState('all')
+  const [categories, setCategories] = useState([]) // État pour stocker les catégories
 
   // Références pour le scroll
   const produitsContainerRef = useRef(null)
@@ -120,6 +125,12 @@ const PointDeVente = () => {
       setClients(clientsRes.data)
       setEntrepots(entrepotsRes.data.filter(e => e.actif))
       
+      // Extraire les catégories uniques des produits
+      const categoriesUniques = extraireCategoriesDesProduits(produitsRes.data)
+      setCategories(categoriesUniques)
+      
+      console.log("Catégories extraites:", categoriesUniques)
+      
       // Sélectionner le premier entrepôt par défaut si disponible
       if (entrepotsRes.data.length > 0) {
         const entrepotsActifs = entrepotsRes.data.filter(e => e.actif)
@@ -134,6 +145,26 @@ const PointDeVente = () => {
       setSnackbar({ open: true, message: 'Erreur lors du chargement des données', severity: 'error' })
       setLoading(false)
     }
+  }
+
+  // Fonction pour extraire les catégories des produits
+  const extraireCategoriesDesProduits = (produitsData) => {
+    // Créer un Set des catégories uniques
+    const categoriesSet = new Set()
+    
+    produitsData.forEach(produit => {
+      if (produit.categorie) {
+        categoriesSet.add(produit.categorie)
+      }
+    })
+    
+    // Convertir le Set en tableau avec le bon format
+    return Array.from(categoriesSet).map((categorie, index) => ({
+      id: index + 1, // ID temporaire
+      nom: categorie,
+      description: `Catégorie: ${categorie}`,
+      nombre_produits: produitsData.filter(p => p.categorie === categorie).length
+    }))
   }
 
   useEffect(() => {
@@ -289,7 +320,6 @@ const PointDeVente = () => {
   // Fermer le dialog
   const handleCloseDialog = () => {
     setOpenDialog(false)
-    setOpenClientDialog(false)
     setActiveStep(0)
     setSubmitting(false)
   }
@@ -348,17 +378,20 @@ const PointDeVente = () => {
     }
   }
 
-  // Obtenir les catégories uniques
-  const categories = [...new Set(produits.map(p => p.categorie).filter(Boolean))]
+  // Gérer le changement d'onglet
+  const handleTabChange = (event, newValue) => {
+    setSelectedTab(newValue)
+    setFilterCategorie(newValue === 'all' ? '' : newValue)
+  }
 
-  // Filtrer les produits
+  // Obtenir les produits filtrés
   const filteredProduits = produits.filter(produit => {
     const matchesSearch = 
       produit.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       produit.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (produit.description && produit.description.toLowerCase().includes(searchTerm.toLowerCase()))
     
-    const matchesCategorie = !filterCategorie || produit.categorie === filterCategorie
+    const matchesCategorie = selectedTab === 'all' || produit.categorie === selectedTab
     
     return matchesSearch && matchesCategorie
   })
@@ -419,7 +452,13 @@ const PointDeVente = () => {
                   fontSize: '0.7rem',
                   height: 24,
                   backgroundColor: alpha(vividOrange, 0.1),
-                  color: vividOrange
+                  color: vividOrange,
+                  maxWidth: '120px',
+                  '& .MuiChip-label': {
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }
                 }}
               />
             )}
@@ -658,14 +697,63 @@ const PointDeVente = () => {
                     >
                       <MenuItem value="">Toutes les catégories</MenuItem>
                       {categories.map((categorie) => (
-                        <MenuItem key={categorie} value={categorie}>
-                          {categorie}
+                        <MenuItem key={categorie.id} value={categorie.nom}>
+                          {categorie.nom} ({categorie.nombre_produits || 0})
                         </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
                 </Grid>
               </Grid>
+
+              {/* Onglets des catégories - Version améliorée */}
+              {categories.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Tabs
+                    value={selectedTab}
+                    onChange={handleTabChange}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    sx={{
+                      '& .MuiTabs-indicator': {
+                        backgroundColor: vividOrange,
+                      },
+                      '& .MuiTab-root': {
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        fontSize: '0.85rem',
+                        minHeight: 36,
+                        '&.Mui-selected': {
+                          color: vividOrange,
+                          fontWeight: 600,
+                        }
+                      }
+                    }}
+                  >
+                    <Tab 
+                      value="all" 
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <AllInclusiveIcon sx={{ fontSize: 16 }} />
+                          Tous ({produits.length})
+                        </Box>
+                      } 
+                    />
+                    {categories.map((categorie) => (
+                      <Tab 
+                        key={categorie.id}
+                        value={categorie.nom}
+                        label={
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <CategoryIcon sx={{ fontSize: 16 }} />
+                            {categorie.nom} ({categorie.nombre_produits || 0})
+                          </Box>
+                        }
+                      />
+                    ))}
+                  </Tabs>
+                </Box>
+              )}
             </Card>
           </Box>
 
@@ -677,14 +765,47 @@ const PointDeVente = () => {
             borderRadius: 3,
             backgroundColor: alpha(darkCayn, 0.02)
           }}>
-            <Box sx={{ p: 2, pb: 1, borderBottom: `1px solid ${alpha(darkCayn, 0.1)}` }}>
+            {/* En-tête avec compteur */}
+            <Box sx={{ 
+              p: 2, 
+              pb: 1, 
+              borderBottom: `1px solid ${alpha(darkCayn, 0.1)}`,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
               <Typography variant="h5" sx={{ 
                 color: darkCayn, 
                 fontWeight: 600,
                 fontSize: '1.1rem'
               }}>
-                Produits disponibles {selectedEntrepot && `(${entrepots.find(e => e.id == selectedEntrepot)?.nom})`}
+                {selectedTab === 'all' 
+                  ? `Tous les produits (${filteredProduits.length})`
+                  : `${selectedTab} (${filteredProduits.length})`
+                } {selectedEntrepot && `| Entrepôt: ${entrepots.find(e => e.id == selectedEntrepot)?.nom}`}
               </Typography>
+              
+              {/* Statistiques rapides */}
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Chip 
+                  label={`${produits.length} produits`}
+                  size="small"
+                  sx={{ 
+                    backgroundColor: alpha(darkCayn, 0.1),
+                    color: darkCayn,
+                    fontWeight: 500
+                  }}
+                />
+                <Chip 
+                  label={`${categories.length} catégories`}
+                  size="small"
+                  sx={{ 
+                    backgroundColor: alpha(vividOrange, 0.1),
+                    color: vividOrange,
+                    fontWeight: 500
+                  }}
+                />
+              </Box>
             </Box>
 
             <Box
@@ -708,19 +829,72 @@ const PointDeVente = () => {
                     Aucun produit trouvé
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    {searchTerm || filterCategorie ? 
+                    {searchTerm || selectedTab !== 'all' ? 
                       'Modifiez vos critères de recherche' : 
                       'Aucun produit disponible dans cet entrepôt'}
                   </Typography>
                 </Box>
               ) : (
-                <Grid container spacing={2}>
-                  {filteredProduits.map((produit) => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={produit.id}>
-                      <ProduitCard produit={produit} />
+                <>
+                  {/* Section par catégorie avec titre (uniquement pour l'onglet "Tous") */}
+                  {selectedTab === 'all' && categories.length > 0 ? (
+                    categories.map((categorie) => {
+                      const produitsCategorie = filteredProduits.filter(p => p.categorie === categorie.nom)
+                      
+                      if (produitsCategorie.length === 0) return null
+                      
+                      return (
+                        <Box key={categorie.id} sx={{ mb: 4 }}>
+                          {/* En-tête de catégorie */}
+                          <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 2, 
+                            mb: 2,
+                            p: 1,
+                            borderBottom: `2px solid ${alpha(vividOrange, 0.3)}`
+                          }}>
+                            <CategoryIcon sx={{ color: vividOrange, fontSize: 24 }} />
+                            <Typography variant="h6" sx={{ 
+                              fontWeight: 'bold',
+                              color: darkCayn,
+                              flexGrow: 1
+                            }}>
+                              {categorie.nom}
+                              <Typography variant="caption" sx={{ ml: 1, color: 'text.secondary' }}>
+                                ({produitsCategorie.length} produits)
+                              </Typography>
+                            </Typography>
+                            {categorie.description && (
+                              <Tooltip title={categorie.description}>
+                                <IconButton size="small">
+                                  <InfoIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          </Box>
+                          
+                          {/* Produits de cette catégorie */}
+                          <Grid container spacing={2}>
+                            {produitsCategorie.map((produit) => (
+                              <Grid item xs={12} sm={6} md={4} lg={3} key={produit.id}>
+                                <ProduitCard produit={produit} />
+                              </Grid>
+                            ))}
+                          </Grid>
+                        </Box>
+                      )
+                    })
+                  ) : (
+                    <Grid container spacing={2}>
+                      {filteredProduits.map((produit) => (
+                        <Grid item xs={12} sm={6} md={4} lg={3} key={produit.id}>
+                          <ProduitCard produit={produit} />
+                        </Grid>
+                      ))}
                     </Grid>
-                  ))}
-                </Grid>
+                  )}
+                </>
               )}
             </Box>
           </Box>
@@ -824,6 +998,15 @@ const PointDeVente = () => {
                           <Typography variant="body1" fontWeight="600" color={darkCayn}>
                             {item.produit.nom}
                           </Typography>
+                          {item.produit.categorie && (
+                            <Typography variant="caption" sx={{ 
+                              display: 'block',
+                              color: vividOrange,
+                              fontWeight: 500
+                            }}>
+                              {item.produit.categorie}
+                            </Typography>
+                          )}
                           <Typography variant="caption" color="textSecondary" sx={{ display: 'block' }}>
                             {entrepots.find(e => e.id == item.entrepot)?.nom || 'N/A'}
                           </Typography>
@@ -1154,6 +1337,7 @@ const PointDeVente = () => {
                         <TableHead>
                           <TableRow>
                             <TableCell>Produit</TableCell>
+                            <TableCell>Catégorie</TableCell>
                             <TableCell align="right">Quantité</TableCell>
                             <TableCell align="right">Prix unitaire</TableCell>
                             <TableCell align="right">Total</TableCell>
@@ -1176,6 +1360,16 @@ const PointDeVente = () => {
                                     {item.produit.nom}
                                   </Typography>
                                 </Box>
+                              </TableCell>
+                              <TableCell>
+                                <Chip 
+                                  label={item.produit.categorie || 'Non catégorisé'}
+                                  size="small"
+                                  sx={{ 
+                                    backgroundColor: alpha(vividOrange, 0.1),
+                                    color: vividOrange
+                                  }}
+                                />
                               </TableCell>
                               <TableCell align="right">{item.quantite}</TableCell>
                               <TableCell align="right">
