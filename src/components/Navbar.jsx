@@ -442,7 +442,7 @@ export default function Navbar(props) {
                   fontSize: { xs: '1.2rem', sm: '1.5rem' }
                 }}
               >
-                 AFRITEXIA GESTION
+                 GALSENSHOP GESTION
               </Typography>
             </Box>
             
@@ -795,7 +795,7 @@ export default function Navbar(props) {
                 fontSize: '0.9rem'
               }}
             >
-              AFRITEXIA
+              GALSENSHOP
             </Typography>
           </Box>
           
