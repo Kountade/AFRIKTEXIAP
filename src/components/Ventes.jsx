@@ -856,10 +856,10 @@ const generatePDF = async (vente) => {
           doc.setFontSize(16);
           doc.setFont('helvetica', 'bold');
           doc.setTextColor(0, 0, 0);
-          doc.text('MGS', margins.left + (logoWidth / 2), yPosition + 8, { align: 'center' });
+          doc.text('GALSEN', margins.left + (logoWidth / 2), yPosition + 8, { align: 'center' });
           doc.setFontSize(10);
           doc.setFont('helvetica', 'normal');
-          doc.text('SARL', margins.left + (logoWidth / 2), yPosition + 14, { align: 'center' });
+          doc.text('GALSEN SHOP', margins.left + (logoWidth / 2), yPosition + 14, { align: 'center' });
           doc.text('Stock', margins.left + (logoWidth / 2), yPosition + 19, { align: 'center' });
           
           resolve();
@@ -953,7 +953,7 @@ const generatePDF = async (vente) => {
     doc.setFont('helvetica', 'bold');
     doc.text('Email:', infoSocieteX + 6, infoY);
     doc.setFont('helvetica', 'normal');
-    doc.text('jallowrimkaz@gmail.com', infoSocieteX + 20, infoY);
+    doc.text('galsenshop@gmail.com', infoSocieteX + 20, infoY);
     
     // Ajuster yPosition
     yPosition = Math.max(infoSocieteY + infoBoxHeight + 5, yPosition + 35);
@@ -1439,7 +1439,7 @@ const generatePDF = async (vente) => {
     // Nom de l'entreprise
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text('AFRITEXIA', signatureEntrepriseX + (signatureWidth / 2), yPosition + 22, { align: 'center' });
+    doc.text('GALSENSHOP', signatureEntrepriseX + (signatureWidth / 2), yPosition + 22, { align: 'center' });
     
     // Ligne pour la signature
     doc.setDrawColor(0, 0, 0);
@@ -1472,10 +1472,10 @@ const generatePDF = async (vente) => {
     doc.line(margins.left, footerY - 5, pageWidth - margins.right, footerY - 5);
     
     // Informations de bas de page
-    doc.text('AFRITEXIA - Capital social: XX XXX € - RCS: XXXXXX - SIRET: XXX XXX XXX XXXXX - TVA: FRXX XXXXXXX', 
+    doc.text('GALSENSHOP - Capital social: XX XXX € - RCS: XXXXXX - SIRET: XXX XXX XXX XXXXX - TVA: FRXX XXXXXXX', 
              pageWidth / 2, footerY, { align: 'center' });
     
-    doc.text('Adresse: Votre adresse complète - Tél: XX XX XX XX XX - Email: contact@afriktexia.com', 
+    doc.text('Adresse: Votre adresse complète - Tél: XX XX XX XX XX - Email: contact@galsenshop.com', 
              pageWidth / 2, footerY + 4, { align: 'center' });
     
     doc.text(`Facture générée électroniquement le ${new Date().toLocaleDateString('fr-FR')} - Valide sans signature`, 
