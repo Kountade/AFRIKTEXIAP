@@ -11,7 +11,7 @@ const getBaseUrl = () => {
   
   // Priorité 2 : Détection selon le mode
   if (import.meta.env.PROD) {
-    return 'https://afriktexiabackend.onrender.com'
+    return 'https://stock-gestion-qtpy.onrender.com'
   }
   
   // Développement local
