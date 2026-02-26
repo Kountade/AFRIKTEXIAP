@@ -69,7 +69,8 @@ import {
   Category as CategoryIcon,
   Image as ImageIcon,
   AllInclusive as AllInclusiveIcon,
-  Info as InfoIcon
+  Info as InfoIcon,
+  Print as PrintIcon
 } from '@mui/icons-material'
 
 // Image par défaut si le produit n'a pas d'image
@@ -90,7 +91,8 @@ const PointDeVente = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
   const [submitting, setSubmitting] = useState(false)
   const [selectedTab, setSelectedTab] = useState('all')
-  const [categories, setCategories] = useState([]) // État pour stocker les catégories
+  const [categories, setCategories] = useState([])
+  const [lastVente, setLastVente] = useState(null) // État pour stocker la dernière vente
 
   // Références pour le scroll
   const produitsContainerRef = useRef(null)
@@ -338,6 +340,387 @@ const PointDeVente = () => {
     setActiveStep(1)
   }
 
+  // Fonction pour imprimer le ticket de vente
+const imprimerTicket = (venteData) => {
+    // Créer une fenêtre d'impression
+    const printWindow = window.open('', '_blank');
+    
+    // Formater la date
+    const date = new Date().toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+
+    // Récupérer les informations du client
+    const client = clients.find(c => c.id === parseInt(formData.client));
+    
+    // Calculer les totaux
+    const sousTotal = calculerTotalPanier();
+    const remise = parseFloat(formData.remise || 0);
+    const totalTTC = sousTotal - remise; // Maintenant c'est directement le total TTC
+    const montantPaye = parseFloat(formData.montant_paye || totalTTC);
+    const monnaieRendue = Math.max(0, montantPaye - totalTTC);
+
+    // Générer un numéro de ticket
+    const numeroTicket = venteData?.numero || `TKT-${Date.now().toString().slice(-8)}-${Math.floor(Math.random() * 1000)}`;
+
+    // Style CSS optimisé pour papier 80mm
+    const styles = `
+      <style>
+        body {
+          font-family: 'Arial', 'Helvetica', sans-serif;
+          margin: 0;
+          padding: 0;
+          background: white;
+          font-size: 12px;
+          line-height: 1.4;
+          font-weight: 500;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .ticket {
+          width: 72mm;
+          margin: 0 auto;
+          padding: 3mm 2mm;
+          box-sizing: border-box;
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 4mm;
+          border-bottom: 2px solid #000;
+          padding-bottom: 3mm;
+        }
+        .header h1 {
+          font-size: 22px;
+          margin: 0 0 2mm 0;
+          font-weight: 800;
+          color: #000;
+          letter-spacing: 0.5px;
+        }
+        .header p {
+          margin: 1mm 0;
+          font-size: 11px;
+          font-weight: 500;
+          color: #000;
+        }
+        .numero-ticket {
+          text-align: center;
+          font-weight: 800;
+          margin: 3mm 0;
+          padding: 2mm;
+          background: #f0f0f0;
+          font-size: 16px;
+          border-radius: 3px;
+          border: 1px solid #000;
+        }
+        .info-row {
+          text-align: center;
+          margin-bottom: 3mm;
+          font-size: 12px;
+          font-weight: 500;
+          background: #f9f9f9;
+          padding: 2mm;
+          border-radius: 3px;
+        }
+        .client-info {
+          margin: 3mm 0;
+          padding: 2.5mm;
+          border: 2px solid #000;
+          font-size: 12px;
+          font-weight: 500;
+          border-radius: 3px;
+          background: #f5f5f5;
+        }
+        .client-info strong {
+          font-size: 14px;
+          font-weight: 800;
+        }
+        .items {
+          margin: 4mm 0;
+        }
+        .item-header {
+          display: grid;
+          grid-template-columns: 32mm 10mm 12mm 15mm;
+          gap: 1mm;
+          font-weight: 800;
+          margin-bottom: 2mm;
+          padding-bottom: 1mm;
+          border-bottom: 2px solid #000;
+          font-size: 11px;
+          text-transform: uppercase;
+        }
+        .item-header span:not(:first-child) {
+          text-align: right;
+        }
+        .item {
+          display: grid;
+          grid-template-columns: 32mm 10mm 12mm 15mm;
+          gap: 1mm;
+          margin-bottom: 2mm;
+          font-size: 12px;
+          font-weight: 500;
+          padding: 1mm 0;
+          border-bottom: 1px dotted #666;
+        }
+        .item-details {
+          font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .item-qty, .item-price, .item-total {
+          text-align: right;
+          font-weight: 600;
+        }
+        .item-total {
+          font-weight: 800;
+        }
+        .article-code {
+          color: #555;
+          font-size: 10px;
+          font-weight: 400;
+          display: block;
+        }
+        .totals {
+          margin-top: 3mm;
+          border-top: 2px solid #000;
+          padding-top: 2mm;
+        }
+        .total-line {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 1.5mm;
+          font-size: 13px;
+          font-weight: 600;
+        }
+        .total-line span:last-child {
+          font-weight: 700;
+        }
+        .total-final {
+          font-size: 18px;
+          font-weight: 800;
+          margin-top: 2mm;
+          padding-top: 1.5mm;
+          border-top: 2px solid #000;
+          color: #000;
+        }
+        .total-final span:last-child {
+          font-size: 20px;
+          color: #003C3f;
+        }
+        .payment-info {
+          margin: 3mm 0;
+          padding: 2.5mm;
+          background: #f0f0f0;
+          font-size: 13px;
+          font-weight: 600;
+          border-radius: 3px;
+          border: 1px solid #000;
+        }
+        .footer {
+          margin-top: 4mm;
+          text-align: center;
+          font-size: 10px;
+          font-weight: 500;
+          border-top: 2px dashed #000;
+          padding-top: 2mm;
+        }
+        .barcode {
+          text-align: center;
+          margin: 3mm 0;
+          font-family: 'Courier New', monospace;
+          font-size: 14px;
+          font-weight: 800;
+          letter-spacing: 2px;
+          background: #fff;
+          padding: 2mm;
+          border: 1px solid #000;
+        }
+        .signature {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 4mm;
+          font-size: 10px;
+          font-weight: 600;
+        }
+        .signature div {
+          width: 45%;
+          text-align: center;
+        }
+        .signature-line {
+          border-top: 2px solid #000;
+          margin-top: 5mm;
+          width: 100%;
+          height: 2mm;
+        }
+        .merci {
+          text-align: center;
+          margin-top: 3mm;
+          font-size: 16px;
+          font-weight: 800;
+          color: #003C3f;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+        .info-label {
+          font-weight: 800;
+          font-size: 12px;
+        }
+        .highlight {
+          background: #ffd700;
+          padding: 1mm;
+          border-radius: 2px;
+          font-weight: 800;
+        }
+        @media print {
+          body { margin: 0; padding: 0; }
+          .ticket { width: 72mm; }
+        }
+      </style>
+    `;
+
+    // Contenu HTML du ticket (sans TVA)
+    const ticketContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Ticket de vente ${numeroTicket}</title>
+        ${styles}
+      </head>
+      <body>
+        <div class="ticket">
+          <div class="header">
+            <h1>VOTRE ENTREPRISE</h1>
+            <p>123 Rue du Commerce</p>
+            <p>75001 Paris</p>
+            <p>Tél: 01 23 45 67 89</p>
+            <p>SIRET: 123 456 789 00012</p>
+          </div>
+
+          <div class="numero-ticket">
+            ═══════════════════════════<br>
+            <strong>N° ${numeroTicket}</strong><br>
+            ═══════════════════════════
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">📅 ${date}</span><br>
+            <span class="info-label">👤 Caissier:</span> Utilisateur 1
+          </div>
+
+          ${client ? `
+          <div class="client-info">
+            <strong>👤 CLIENT</strong><br>
+            <span style="font-size: 14px;">${client.nom}</span><br>
+            ${client.email ? `📧 ${client.email}<br>` : ''}
+            ${client.telephone ? `📞 ${client.telephone}<br>` : ''}
+            ${client.adresse ? `📍 ${client.adresse}` : ''}
+          </div>
+          ` : ''}
+
+          <div class="items">
+            <div class="item-header">
+              <span>ARTICLE</span>
+              <span>QTÉ</span>
+              <span>P.U.</span>
+              <span>TOTAL</span>
+            </div>
+            
+            ${panier.map(item => `
+              <div class="item">
+                <span class="item-details">
+                  <strong>${item.produit.nom}</strong>
+                  ${item.produit.code ? `<span class="article-code">📦 ${item.produit.code}</span>` : ''}
+                </span>
+                <span class="item-qty"><strong>${item.quantite}</strong></span>
+                <span class="item-price"><strong>${formatNumber(parseFloat(item.prix_unitaire))}€</strong></span>
+                <span class="item-total"><strong>${formatNumber(item.quantite * parseFloat(item.prix_unitaire))}€</strong></span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="totals">
+            <div class="total-line">
+              <span>Sous-total</span>
+              <span>${formatNumber(sousTotal)}€</span>
+            </div>
+            
+            ${remise > 0 ? `
+            <div class="total-line" style="color: #c00;">
+              <span>Remise</span>
+              <span>-${formatNumber(remise)}€</span>
+            </div>
+            ` : ''}
+            
+            <div class="total-line total-final">
+              <span>TOTAL À PAYER</span>
+              <span>${formatNumber(totalTTC)}€</span>
+            </div>
+          </div>
+
+          <div class="payment-info">
+            <div class="total-line">
+              <span>💳 Paiement</span>
+              <span>${formData.mode_paiement ? formData.mode_paiement.replace('_', ' ').toUpperCase() : 'ESPÈCES'}</span>
+            </div>
+            <div class="total-line">
+              <span>💰 Payé</span>
+              <span>${formatNumber(montantPaye)}€</span>
+            </div>
+            ${monnaieRendue > 0 ? `
+            <div class="total-line">
+              <span>💵 Rendu</span>
+              <span>${formatNumber(monnaieRendue)}€</span>
+            </div>
+            ` : ''}
+          </div>
+
+          <div class="barcode">
+            ${numeroTicket}
+          </div>
+
+          <div class="signature">
+            <div>
+              <span>✍️ Signature client</span>
+              <div class="signature-line"></div>
+            </div>
+            <div>
+              <span>🏢 Cachet boutique</span>
+              <div class="signature-line"></div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>⭐ Merci de votre visite ⭐</p>
+            <p>↩️ Retours acceptés sous 14 jours</p>
+            <p>🌐 www.votreentreprise.com</p>
+          </div>
+
+          <div class="merci">
+            À BIENTÔT !
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() { window.close(); };
+          }
+        </script>
+      </body>
+      </html>
+    `;
+
+    // Écrire le contenu dans la nouvelle fenêtre
+    printWindow.document.write(ticketContent);
+    printWindow.document.close();
+  };
+
   // Soumettre la vente
   const handleSubmitVente = async () => {
     setSubmitting(true)
@@ -359,11 +742,19 @@ const PointDeVente = () => {
 
     try {
       const response = await AxiosInstance.post('ventes/', submitData)
+      setLastVente(response.data)
       setSnackbar({ open: true, message: 'Vente effectuée avec succès', severity: 'success' })
+      
+      // Fermer le dialog
+      handleCloseDialog()
+      
+      // Imprimer le ticket
+      setTimeout(() => {
+        imprimerTicket(response.data);
+      }, 500);
       
       // Vider le panier
       setPanier([])
-      handleCloseDialog()
       
       // Rafraîchir les stocks
       await fetchData()
@@ -608,6 +999,20 @@ const PointDeVente = () => {
               <RefreshIcon />
             </IconButton>
           </Tooltip>
+          {lastVente && (
+            <Tooltip title="Réimprimer le dernier ticket">
+              <IconButton 
+                onClick={() => imprimerTicket(lastVente)}
+                sx={{ 
+                  bgcolor: alpha(vividOrange, 0.1),
+                  color: vividOrange,
+                  '&:hover': { bgcolor: alpha(vividOrange, 0.2) }
+                }}
+              >
+                <PrintIcon />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       </Box>
 
